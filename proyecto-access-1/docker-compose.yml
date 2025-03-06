@@ -1,0 +1,14 @@
+services:
+  access-api:
+    build: .
+    container_name: access-api
+    ports:
+      - "8080:8080"
+    volumes:
+      - C:\Users\Tadeo\Downloads\prueba:/app/database
+      - C:\Users\Tadeo\Documents\workspace-spring-tool.RELEASE\proyecto-access-1\target\practica-access-1-0.0.1-SNAPSHOT.jar:/app/app.jar
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:ucanaccess:///app/database/Prod_Data.mdb;memory=false;
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=net.ucanaccess.jdbc.UcanaccessDriver
+    networks:
+      - default
