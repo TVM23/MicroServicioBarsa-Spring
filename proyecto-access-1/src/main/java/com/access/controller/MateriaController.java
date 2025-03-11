@@ -3,6 +3,7 @@ package com.access.controller;
 import java.sql.SQLException;
 import java.util.List;
 
+import org.springframework.context.event.EventListener;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,14 +13,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.access.model.Materia;
+import com.access.service.MateriaPaginationDTO;
 import com.access.service.MateriaService;
 
 @RestController
-@RequestMapping("/materias")
+@RequestMapping("/materia")
 public class MateriaController {
 
 	 private final MateriaService materiaService;
-
+	 
 	    public MateriaController(MateriaService materiaService) {
 	        this.materiaService = materiaService;
 	    }

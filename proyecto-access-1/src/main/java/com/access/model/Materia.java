@@ -15,8 +15,19 @@ public class Materia {
     private Integer CantXUnidad;
     private String Proceso;
     private Boolean Borrado;
-
     
+    // ✅ Correct constructor
+    public Materia(String codigoMat, String descripcion, String unidad, String proceso, boolean borrado) {
+        this.codigoMat = codigoMat;
+        this.Descripcion = descripcion;
+        this.Unidad = unidad;
+        this.Proceso = proceso;
+        this.Borrado = borrado;
+    }
+
+    // ✅ Default constructor (required for frameworks like Spring)
+    public Materia() {}
+
 	public String getCodigoMat() {
 		return codigoMat;
 	}

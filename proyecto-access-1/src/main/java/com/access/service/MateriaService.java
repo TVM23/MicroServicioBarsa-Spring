@@ -26,13 +26,39 @@ public class MateriaService {
 	        });
 	    }
 	    
+	    public List<Materia> getMateriasFiltradas(MateriaPaginationDTO dto) {
+	        String sql = "SELECT * FROM Materia WHERE 1=1";
+	        
+	        if (dto.getCodigoMat() != null) {
+	            sql += " AND codigoMat = '" + dto.getCodigoMat() + "'";
+	        }
+	        if (dto.getDescripcion() != null) {
+	            sql += " AND descripcion LIKE '%" + dto.getDescripcion() + "%'";
+	        }
+	        if (dto.getUnidad() != null) {
+	            sql += " AND unidad = '" + dto.getUnidad() + "'";
+	        }
+	        if (dto.getProceso() != null) {
+	            sql += " AND proceso = '" + dto.getProceso() + "'";
+	        }
+	        if (dto.getBorrado() != null) {
+	            sql += " AND borrado = " + (dto.getBorrado() ? "true" : "false");
+	        }
+
+	        return jdbcTemplate.query(sql, (rs, rowNum) -> new Materia(
+	            rs.getString("codigoMat"),
+	            rs.getString("descripcion"),
+	            rs.getString("unidad"),
+	            rs.getString("proceso"),
+	            rs.getBoolean("borrado")
+	        ));
+	    }
+	    
 	    public List<Materia> getMateriasByCodigoMat(String codigo) {
 	        String sql = "SELECT * FROM Materia where CodigoMat='"+codigo+"'";	       
 	        return jdbcTemplate.query(sql, (rs, rowNum) -> {
 	            return convert(rs);
-	        });
-	        
-	        
+	        });  
 	    }
 	    
 	    private Materia convert(ResultSet rs) throws SQLException {
