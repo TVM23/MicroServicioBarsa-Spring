@@ -1,4 +1,4 @@
-package com.access.service;
+package com.access.dto.materia;
 
 import javax.validation.constraints.Positive;
 import lombok.Getter;
@@ -6,7 +6,6 @@ import lombok.Setter;
 
 public class MateriaPaginationDTO {
 
-    @Positive(message = "El precio debe ser un valor positivo")
     private int page;
     private int limit;
     private String codigoMat;

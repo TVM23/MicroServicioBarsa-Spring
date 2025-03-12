@@ -6,8 +6,11 @@ import java.sql.SQLException;
 import java.util.List;
 
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Service;
 
+import com.access.dto.PaginationResult;
+import com.access.dto.materia.MateriaPaginationDTO;
 import com.access.model.Materia;
 
 @Service
@@ -17,48 +20,6 @@ public class MateriaService {
 
 	    public MateriaService(JdbcTemplate jdbcTemplate) {
 	        this.jdbcTemplate = jdbcTemplate;
-	    }
-
-	    public List<Materia> getAllMaterias() {
-	        String sql = "SELECT * FROM Materia where Unidad='PZAS'";
-	        return jdbcTemplate.query(sql, (rs, rowNum) -> {
-	            return convert(rs);
-	        });
-	    }
-	    
-	    public List<Materia> getMateriasFiltradas(MateriaPaginationDTO dto) {
-	        String sql = "SELECT * FROM Materia WHERE 1=1";
-	        
-	        if (dto.getCodigoMat() != null) {
-	            sql += " AND codigoMat = '" + dto.getCodigoMat() + "'";
-	        }
-	        if (dto.getDescripcion() != null) {
-	            sql += " AND descripcion LIKE '%" + dto.getDescripcion() + "%'";
-	        }
-	        if (dto.getUnidad() != null) {
-	            sql += " AND unidad = '" + dto.getUnidad() + "'";
-	        }
-	        if (dto.getProceso() != null) {
-	            sql += " AND proceso = '" + dto.getProceso() + "'";
-	        }
-	        if (dto.getBorrado() != null) {
-	            sql += " AND borrado = " + (dto.getBorrado() ? "true" : "false");
-	        }
-
-	        return jdbcTemplate.query(sql, (rs, rowNum) -> new Materia(
-	            rs.getString("codigoMat"),
-	            rs.getString("descripcion"),
-	            rs.getString("unidad"),
-	            rs.getString("proceso"),
-	            rs.getBoolean("borrado")
-	        ));
-	    }
-	    
-	    public List<Materia> getMateriasByCodigoMat(String codigo) {
-	        String sql = "SELECT * FROM Materia where CodigoMat='"+codigo+"'";	       
-	        return jdbcTemplate.query(sql, (rs, rowNum) -> {
-	            return convert(rs);
-	        });  
 	    }
 	    
 	    private Materia convert(ResultSet rs) throws SQLException {
@@ -76,6 +37,58 @@ public class MateriaService {
 	            materia.setProceso(rs.getString("Proceso"));
 	            materia.setBorrado(rs.getBoolean("Borrado"));
 	            return materia;
+	    }
+
+	    public List<Materia> getAllMaterias() {
+	        String sql = "SELECT * FROM Materia where Unidad='PZAS'";
+	        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+	            return convert(rs);
+	        });
+	    }
+	    
+	    public PaginationResult<List<Materia>> getMateriasFiltradas(MateriaPaginationDTO dto) {
+	        int pageValue = dto.getPage();
+	        int limitValue = dto.getLimit();
+	        int offset = (pageValue - 1) * limitValue;
+	    	
+	        String sql = "FROM Materia WHERE 1=1";
+	        
+	        if (dto.getCodigoMat() != null) {
+	            sql += " AND CodigoMat = '" + dto.getCodigoMat() + "'";
+	        }
+	        if (dto.getDescripcion() != null) {
+	            sql += " AND Descripcion LIKE '%" + dto.getDescripcion() + "%'";
+	        }
+	        if (dto.getUnidad() != null) {
+	            sql += " AND Unidad = '" + dto.getUnidad() + "'";
+	        }
+	        if (dto.getProceso() != null) {
+	            sql += " AND Proceso = '" + dto.getProceso() + "'";
+	        }
+	        if (dto.getBorrado() != null) {
+	            sql += " AND Borrado = " + (dto.getBorrado() ? "true" : "false");
+	        }
+	        
+	        SqlRowSet  totalResult = jdbcTemplate.queryForRowSet("SELECT COUNT(*) AS total " + sql);
+	        int totalItems = 0;
+	        if (totalResult.next()) {
+	            totalItems = totalResult.getInt("total");
+	        }
+	        int totalPages = (int) Math.ceil((double) totalItems / limitValue);
+	  
+	        sql = "Select * " + sql + " LIMIT " + limitValue + " OFFSET "+offset;
+	        List<Materia> data = jdbcTemplate.query(sql,  (rs, rowNum) -> {
+	        	return convert(rs);
+	        });
+	        
+	        return new PaginationResult<>(totalItems, totalPages, pageValue, data);
+	    }
+	    
+	    public List<Materia> getMateriasByCodigoMat(String codigo) {
+	        String sql = "SELECT * FROM Materia where CodigoMat='"+codigo+"'";	       
+	        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+	            return convert(rs);
+	        });  
 	    }
 	    
 	    private void deleteIndexMateria() {

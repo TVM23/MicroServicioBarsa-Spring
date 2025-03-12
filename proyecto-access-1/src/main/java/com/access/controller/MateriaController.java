@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.access.dto.materia.MateriaPaginationDTO;
 import com.access.model.Materia;
-import com.access.service.MateriaPaginationDTO;
 import com.access.service.MateriaService;
 
 @RestController
