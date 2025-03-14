@@ -26,12 +26,12 @@ public class PapeletaController {
 
 	    @GetMapping
 	    public List<Papeleta> getAllMaterias() {
-	        return papeletaService.getAllMaterias();
+	        return papeletaService.getAllPapeletas();
 	    }
 	    
 	    @GetMapping(value="/{codigo}")
-	    public List<Papeleta> getByCodigo(@PathVariable String codigo) {
-	        return papeletaService.getMateriasByDescripcion(codigo);
+	    public List<Papeleta> getByCodigo(@PathVariable Integer folio) {
+	        return papeletaService.getPapeletasByFolio(folio);
 	    }
 
 	    @PostMapping()
@@ -39,9 +39,5 @@ public class PapeletaController {
 	        return papeletaService.addPapeleta(papeleta);
 	    }
 	    
-	    @DeleteMapping(value="/{codigo}")
-	    public List<Papeleta> deletePapeleta(@PathVariable String codigo) throws SQLException {
-	        return papeletaService.deletePapeleta(codigo);
-	    }
 	  
 }

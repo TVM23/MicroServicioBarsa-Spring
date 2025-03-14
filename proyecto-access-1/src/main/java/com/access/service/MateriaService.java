@@ -85,10 +85,8 @@ public class MateriaService {
 	    }
 	    
 	    public List<Materia> getMateriasByCodigoMat(String codigo) {
-	        String sql = "SELECT * FROM Materia where CodigoMat='"+codigo+"'";	       
-	        return jdbcTemplate.query(sql, (rs, rowNum) -> {
-	            return convert(rs);
-	        });  
+	    	String sql = "SELECT * FROM Materia WHERE CodigoMat = ?";
+	    	return jdbcTemplate.query(sql, (rs, rowNum) -> convert(rs), codigo);
 	    }
 	    
 	    private void deleteIndexMateria() {
