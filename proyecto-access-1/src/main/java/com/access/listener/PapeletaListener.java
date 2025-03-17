@@ -9,7 +9,11 @@ import com.access.dto.papeleta.PapeletaPaginationDTO;
 import com.access.model.Papeleta;
 import com.access.service.PapeletaService;
 
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
+import org.springframework.kafka.config.KafkaListenerContainerFactory;
+import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -69,6 +73,26 @@ public class PapeletaListener {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+    
+ // Configurar Kafka para evitar desconexión
+    public KafkaListenerContainerFactory<?> kafkaListenerContainerFactory(
+        ConsumerFactory<String, String> consumerFactory) {
+        
+        ConcurrentKafkaListenerContainerFactory<String, String> factory =
+            new ConcurrentKafkaListenerContainerFactory<>();
+        
+        factory.setConsumerFactory(consumerFactory);
+        factory.getContainerProperties().setIdleBetweenPolls(30000); // 30s entre polls
+        return factory;
+    }
+    
+    // Configuración personalizada de Kafka
+    public Map<String, Object> consumerConfigs() {
+        Map<String, Object> props = new HashMap<>();
+        props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, 60000);  // 1 min timeout
+        props.put(ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG, 15000);  // Heartbeat cada 15s
+        return props;
     }
     
 }

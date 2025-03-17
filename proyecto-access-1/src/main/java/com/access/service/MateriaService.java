@@ -13,11 +13,13 @@ import com.access.dto.PaginationResult;
 import com.access.dto.materia.MateriaPaginationDTO;
 import com.access.model.Materia;
 
+import jakarta.annotation.PostConstruct;
+
 @Service
 public class MateriaService {
 	
 	  private final JdbcTemplate jdbcTemplate;
-
+	  	  
 	    public MateriaService(JdbcTemplate jdbcTemplate) {
 	        this.jdbcTemplate = jdbcTemplate;
 	    }

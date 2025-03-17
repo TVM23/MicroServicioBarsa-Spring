@@ -11,7 +11,21 @@ public class DetallePapeleta {
 	private Integer Surtida;
 	private Integer BackOrder;
 	private String Observacion;
+	private String NombreCliente;
+	private String NombreColor;
 	
+	public String getNombreColor() {
+		return NombreColor;
+	}
+	public void setNombreColor(String nombreColor) {
+		NombreColor = nombreColor;
+	}
+	public String getNombreCliente() {
+		return NombreCliente;
+	}
+	public void setNombreCliente(String nombreCliente) {
+		NombreCliente = nombreCliente;
+	}
 	public Integer getId() {
 		return Id;
 	}

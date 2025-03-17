@@ -26,8 +26,10 @@ public class DetallePapeletaService {
            detallePapeleta.setFolio(rs.getInt("Folio"));
            detallePapeleta.setCodigo(rs.getString("Codigo"));
            detallePapeleta.setColorId(rs.getInt("ColorId"));
+           detallePapeleta.setNombreColor(rs.getString("NombreColor"));
            detallePapeleta.setCantidad(rs.getInt("Cantidad"));
            detallePapeleta.setClienteId(rs.getInt("ClienteId"));
+           detallePapeleta.setNombreCliente(rs.getString("NombreCliente"));
            detallePapeleta.setSurtida(rs.getInt("Surtida"));
            detallePapeleta.setBackOrder(rs.getInt("BackOrder"));
            detallePapeleta.setObservacion(rs.getString("Observacion"));
@@ -35,9 +37,15 @@ public class DetallePapeletaService {
    }
 	
 	public List<DetallePapeleta> getDetallePapeleta(Integer folio) {
-		String sql = "Select * From Detalle_Papeleta WHERE Folio = "+folio+"";
+		String sql = "Select dp.*, "
+				+ "c.Nombre AS NombreCliente,"
+				+ "col.Descripcion AS NombreColor "
+				+ "FROM Detalle_Papeleta dp "
+				+ "INNER JOIN Clientes c ON dp.ClienteId = c.ClienteId "
+				+ "INNER JOIN Colores col ON dp.ColorId = col.ColorId "
+				+ "WHERE Folio = ?";
 		return jdbctemplate.query(sql, (rs, rowNum) -> {
 			return convert(rs);
-		});
+		}, folio);
 	}
 }
