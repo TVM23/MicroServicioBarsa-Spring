@@ -6,11 +6,8 @@ import java.util.Map;
 
 import com.access.dto.PaginationResult;
 import com.access.dto.materia.MateriaPaginationDTO;
-import com.access.dto.papeleta.PapeletaPaginationDTO;
 import com.access.model.Materia;
-import com.access.model.Papeleta;
 import com.access.service.MateriaService;
-import com.access.service.PapeletaService;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
