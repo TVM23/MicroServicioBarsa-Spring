@@ -28,7 +28,6 @@ public class MateriaListener {
 	private final MateriaService materiaService;
     private final KafkaTemplate<String, String> kafkaTemplate;
 
-	 
     public MateriaListener(KafkaTemplate<String, String> kafkaTemplate, MateriaService materiaService) {
         this.kafkaTemplate = kafkaTemplate;
         this.materiaService = materiaService;

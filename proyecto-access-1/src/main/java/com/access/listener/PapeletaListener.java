@@ -29,7 +29,6 @@ public class PapeletaListener {
         this.papeletaService = papeletaService;
     }
 	
-    
     @KafkaListener(topics = "get-papeleta-listado", groupId = "materia-service-group")
     public void getPapeletasFiltradas(String message) {
         try {
