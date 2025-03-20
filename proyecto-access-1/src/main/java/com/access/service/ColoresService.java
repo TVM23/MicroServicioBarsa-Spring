@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import com.access.dto.PaginationResult;
 import com.access.dto.colores.ColoresPaginationDTO;
 import com.access.model.Colores;
+import com.access.model.Papeleta;
 
 @Service
 public class ColoresService {
@@ -28,6 +29,14 @@ public class ColoresService {
 		color.setBorrado(rs.getBoolean("Borrado"));
 		return color;
 	}
+	
+	public List<Colores> getColorByCodigo(Integer colorId) {
+        String sql = "SELECT * FROM Colores where ColorId = ?";	       
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+            return convert(rs);
+        }, colorId);
+    }
+    
 	
 	public PaginationResult<List<Colores>> getColoresFiltrados(ColoresPaginationDTO dto){
 		int pageValue = dto.getPage();
