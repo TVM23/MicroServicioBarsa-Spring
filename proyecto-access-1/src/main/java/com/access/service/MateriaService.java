@@ -3,6 +3,7 @@ package com.access.service;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import com.access.dto.PaginationResult;
 import com.access.dto.materia.MateriaPaginationDTO;
 import com.access.model.Materia;
+import com.access.model.Producto;
 
 import jakarta.annotation.PostConstruct;
 
@@ -52,36 +54,46 @@ public class MateriaService {
 	        int pageValue = dto.getPage();
 	        int limitValue = dto.getLimit();
 	        int offset = (pageValue - 1) * limitValue;
-	    	
-	        String sql = "FROM Materia WHERE 1=1";
+	    		        
+	        StringBuilder sql = new StringBuilder("FROM Materia WHERE 1=1");
+		    List<Object> params = new ArrayList<>(); // Lista para almacenar los parámetros
 	        
 	        if (dto.getCodigoMat() != null) {
-	            sql += " AND CodigoMat = '" + dto.getCodigoMat() + "'";
+	            sql.append(" AND CodigoMat = ?");
+		        params.add(dto.getCodigoMat());
 	        }
 	        if (dto.getDescripcion() != null) {
-	            sql += " AND Descripcion LIKE '%" + dto.getDescripcion() + "%'";
+	            sql.append(" AND Descripcion LIKE ?");
+		        params.add("%" + dto.getDescripcion() + "%");
 	        }
 	        if (dto.getUnidad() != null) {
-	            sql += " AND Unidad = '" + dto.getUnidad() + "'";
+	            sql.append(" AND Unidad = ?");
+		        params.add(dto.getUnidad());
 	        }
 	        if (dto.getProceso() != null) {
-	            sql += " AND Proceso = '" + dto.getProceso() + "'";
+	            sql.append(" AND Proceso = ?");
+		        params.add(dto.getProceso());
 	        }
 	        if (dto.getBorrado() != null) {
-	            sql += " AND Borrado = " + (dto.getBorrado() ? "true" : "false");
+	            sql.append(" AND Borrado = ?");
+		        params.add(dto.getBorrado());
 	        }
 	        
-	        SqlRowSet  totalResult = jdbcTemplate.queryForRowSet("SELECT COUNT(*) AS total " + sql);
-	        int totalItems = 0;
-	        if (totalResult.next()) {
-	            totalItems = totalResult.getInt("total");
-	        }
-	        int totalPages = (int) Math.ceil((double) totalItems / limitValue);
-	  
-	        sql = "Select * " + sql + " LIMIT " + limitValue + " OFFSET "+offset;
-	        List<Materia> data = jdbcTemplate.query(sql,  (rs, rowNum) -> {
-	        	return convert(rs);
-	        });
+	     // Contar el total de registros
+		    String countSql = "SELECT COUNT(*) AS total " + sql.toString();
+		    int totalItems = jdbcTemplate.queryForObject(countSql, Integer.class, params.toArray());
+		 // Calcular el número total de páginas
+		    int totalPages = (int) Math.ceil((double) totalItems / limitValue);
+		    
+		    // Consulta paginada
+		    String paginatedSql = "SELECT * " + sql.toString() + " LIMIT ? OFFSET ?";
+		    params.add(limitValue); // Agregar LIMIT como parámetro
+		    params.add(offset);     // Agregar OFFSET como parámetro
+
+		    // Ejecutar la consulta paginada
+		    List<Materia> data = jdbcTemplate.query(paginatedSql, (rs, rowNum) -> {
+		        return convert(rs);
+		    }, params.toArray());
 	        
 	        return new PaginationResult<>(totalItems, totalPages, pageValue, data);
 	    }

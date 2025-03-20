@@ -12,7 +12,7 @@ public class MateriaPaginationDTO {
     private String descripcion;
     private String unidad;
     private String proceso;
-    private Boolean borrado;
+    private String borrado;
     
     public int getPage() {
 		return page;
@@ -48,12 +48,12 @@ public class MateriaPaginationDTO {
 		return proceso;
 	}
 	public void setProceso(String proceso) {
-		proceso = proceso;
+		this.proceso = proceso;
 	}
-	public Boolean getBorrado() {
+	public String getBorrado() {
 		return borrado;
 	}
-	public void setBorrado(Boolean borrado) {
-		borrado = borrado;
+	public void setBorrado(String borrado) {
+		this.borrado = borrado;
 	}
 }

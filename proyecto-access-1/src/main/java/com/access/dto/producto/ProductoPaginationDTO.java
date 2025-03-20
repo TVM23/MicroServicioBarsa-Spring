@@ -10,8 +10,8 @@ public class ProductoPaginationDTO {
 	private Double venta;
 	private String ean;
 	private String sku;
-	private Boolean tapices;
-	private Boolean borrado;
+	private String tapices;
+	private String borrado;
 	
 	public Integer getPage() {
 		return page;
@@ -67,16 +67,16 @@ public class ProductoPaginationDTO {
 	public void setSku(String sku) {
 		this.sku = sku;
 	}
-	public Boolean getTapices() {
+	public String getTapices() {
 		return tapices;
 	}
-	public void setTapices(Boolean tapices) {
+	public void setTapices(String tapices) {
 		this.tapices = tapices;
 	}
-	public Boolean getBorrado() {
+	public String getBorrado() {
 		return borrado;
 	}
-	public void setBorrado(Boolean borrado) {
+	public void setBorrado(String borrado) {
 		this.borrado = borrado;
 	}
 }
