@@ -81,4 +81,11 @@ public class ColoresService {
 	    // Retornar el resultado paginado
 	    return new PaginationResult<>(totalItems, totalPages, pageValue, data);
 	}
+	
+	public List<Colores> getColorDescripcionByCodigo(Integer colorId) {
+        String sql = "SELECT Descripcion FROM Colores where ColorId = ?";	       
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+            return convert(rs);
+        }, colorId);
+    }
 }

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.access.dto.PaginationResult;
 import com.access.dto.producto.ProductoPaginationDTO;
+import com.access.model.Colores;
 import com.access.model.Producto;
 
 @Service
@@ -113,5 +114,14 @@ public class ProductoService {
 		    // Retornar el resultado paginado
 		    return new PaginationResult<>(totalItems, totalPages, pageValue, data);
 		}
+	  
+	  
+	  public List<Producto> getProductoDecripcionByCodigo(String codigo) {
+		  String sql = "Select Descripcion FROM Producto WHERE Codigo = ?";
+	       return jdbcTemplate.query(sql, (rs, rowNum) -> {
+	           return convert(rs);
+	       }, codigo);
+	  }
+	
 
 }

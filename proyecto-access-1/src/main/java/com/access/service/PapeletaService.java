@@ -3,6 +3,7 @@ package com.access.service;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -74,35 +75,42 @@ public class PapeletaService {
 	        int limitValue = dto.getLimit();
 	        int offset = (pageValue - 1) * limitValue;
 	    	
-	        String sql = "FROM Papeleta WHERE 1=1";
+	        StringBuilder sql = new StringBuilder("FROM Papeleta WHERE 1=1");
+	        List<Object> params = new ArrayList<>();
 	        
 	        if (dto.getFolio() != null) {
-	            sql += " AND Folio = " + dto.getFolio() + "";
+	        	sql.append(" AND Folio = ?");
+	        	params.add(dto.getFolio());
 	        }
 	        if (dto.getTipoId() != null) {
-	            sql += " AND TipoId = '" + dto.getTipoId() + "'";
+	        	sql.append(" AND TipoId = ?");
+	        	params.add(dto.getTipoId());
 	        }
 	        if (dto.getFecha() != null) {
-	            sql += " AND Fecha = #" + dto.getFecha() + "#";
+	            sql.append(" AND Fecha = ?");
+		        params.add(dto.getFecha());
 	        }
 	        if (dto.getStatus() != null) {
-	            sql += " AND Status = '" + dto.getStatus() + "'";
+	        	sql.append(" AND Status = ?");
+	        	params.add(dto.getStatus());
 	        }
 	        if (dto.getObservacionGeneral() != null) {
-	            sql += " AND ObservacionGeneral LIKE '%" + dto.getObservacionGeneral() + "%'";
+	            sql.append(" AND ObservacionGeneral LIKE ?");
+		        params.add("%" + dto.getObservacionGeneral() + "%");
 	        }
 	        
-	        SqlRowSet  totalResult = jdbcTemplate.queryForRowSet("SELECT COUNT(*) AS total " + sql);
-	        int totalItems = 0;
-	        if (totalResult.next()) {
-	            totalItems = totalResult.getInt("total");
-	        }
+	        String countSql = "SELECT COUNT(*) AS total " + sql.toString();
+	        int totalItems = jdbcTemplate.queryForObject(countSql, Integer.class, params.toArray());
+	        
 	        int totalPages = (int) Math.ceil((double) totalItems / limitValue);
+	        
+	        String paginataSql = "Select * " + sql.toString() + " LIMIT ? OFFSET ?";
+	        params.add(limitValue);
+	        params.add(offset);
 	  
-	        sql = "Select * " + sql + " LIMIT " + limitValue + " OFFSET "+offset;
-	        List<Papeleta> data = jdbcTemplate.query(sql,  (rs, rowNum) -> {
+	        List<Papeleta> data = jdbcTemplate.query(paginataSql,  (rs, rowNum) -> {
 	        	return convert(rs);
-	        });
+	        }, params.toArray());
 	        
 	        return new PaginationResult<>(totalItems, totalPages, pageValue, data);
 	    }
