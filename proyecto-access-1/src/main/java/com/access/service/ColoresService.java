@@ -1,15 +1,21 @@
 package com.access.service;
 
+import java.awt.Color;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.access.dto.PaginationResult;
 import com.access.dto.colores.ColoresPaginationDTO;
+import com.access.dto.colores.CreateColorDTO;
 import com.access.model.Colores;
 import com.access.model.Papeleta;
 
@@ -36,7 +42,13 @@ public class ColoresService {
             return convert(rs);
         }, colorId);
     }
-    
+	
+	public List<Colores> getColorByDescripcion(String descripcion) {
+        String sql = "SELECT * FROM Colores where Descripcion = ?";	       
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+            return convert(rs);
+        }, descripcion);
+    }
 	
 	public PaginationResult<List<Colores>> getColoresFiltrados(ColoresPaginationDTO dto){
 		int pageValue = dto.getPage();
@@ -87,5 +99,21 @@ public class ColoresService {
         return jdbcTemplate.query(sql, (rs, rowNum) -> {
             return convert(rs);
         }, colorId);
+    }
+	
+	public ResponseEntity<?> createNewColor(CreateColorDTO dto) {
+	    if(getColorByDescripcion(dto.getDescripcion()).isEmpty()) {
+	    	String sql = "INSERT INTO Colores (Descripcion, Borrado) VALUES (?,?)";
+	        jdbcTemplate.update(sql,
+	        		dto.getDescripcion(),
+	        		dto.getBorrado()
+	        		);
+	        return ResponseEntity.ok(Map.of("message", "Color creado correctamente"));
+    	}
+    	else {
+    		return ResponseEntity
+    	            .status(HttpStatus.BAD_REQUEST)
+    	            .body(Map.of("error", "Ya existe un color con esa descripcion"));
+    	}
     }
 }

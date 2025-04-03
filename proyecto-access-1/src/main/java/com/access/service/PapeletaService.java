@@ -48,11 +48,10 @@ public class PapeletaService {
 	    }
 	    
 	    public List<Papeleta> getPapeletasByFolio(Integer folio) {
-	        String sql = "SELECT * FROM Papeleta where Folio=" + folio + "";	       
-	        
+	        String sql = "SELECT * FROM Papeleta where Folio = ?";	       
 	        return jdbcTemplate.query(sql, (rs, rowNum) -> {
 	            return convert(rs);
-	        });
+	        }, folio);
 	    }
 	    
 	    public Papeleta addPapeleta(Papeleta papeleta) {
@@ -114,6 +113,5 @@ public class PapeletaService {
 	        
 	        return new PaginationResult<>(totalItems, totalPages, pageValue, data);
 	    }
-	    
-
+	   
 }
