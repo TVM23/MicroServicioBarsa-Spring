@@ -37,9 +37,9 @@ public class MateriaController {
 	    }
 
 	    @PostMapping()
-	    public Materia guardarMateria(@RequestBody Materia materia) throws SQLException {
-	        return materiaService.addMateria(materia);
-	    }
+	    //public Materia guardarMateria(@RequestBody Materia materia) throws SQLException {
+	        //return materiaService.addMateria(materia);
+	    //}
 	    
 	    @DeleteMapping(value="/{codigo}")
 	    public List<Materia> deleteMateria(@PathVariable String codigo) throws SQLException {

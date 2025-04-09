@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import com.access.dto.materia.CreateMateriaDTO;
 import com.access.dto.materia.MateriaPaginationDTO;
 import com.access.service.MateriaService;
 
@@ -54,6 +55,18 @@ public class MateriaListener {
   	           }
   	    );
     } 
+    
+    @KafkaListener(topics =  "post-materia-crear", groupId = "materia-service-group")
+    public void createMateria(String message) {
+    	processKafkaMessage(
+    			message, 
+    			"materia-create-response", 
+    			request -> {
+    				CreateMateriaDTO dto = objectMapper.convertValue(request.get("data"), CreateMateriaDTO.class);
+    				return materiaService.createNewMateria(dto);
+    			}
+    		);
+    }
     
     // INICIAN METODOS QUE NO RECIBEN KAFKA PARA SE USAN PARA MANEJARLO
     
