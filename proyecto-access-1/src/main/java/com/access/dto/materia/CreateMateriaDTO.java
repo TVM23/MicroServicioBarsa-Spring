@@ -2,6 +2,8 @@ package com.access.dto.materia;
 
 import java.util.List;
 
+import com.access.dto.ImagenDTO;
+
 public class CreateMateriaDTO {
 	private String codigoMat;
     private String descripcion;
@@ -15,13 +17,13 @@ public class CreateMateriaDTO {
     private Integer cantxunidad;
     private String proceso;
     private String borrado;
-    private List<String> imagenes; 
+    private List<ImagenDTO> imagenes; 
     
     
-	public List<String> getImagenes() {
+	public List<ImagenDTO> getImagenes() {
 		return imagenes;
 	}
-	public void setImagenes(List<String> imagenes) {
+	public void setImagenes(List<ImagenDTO> imagenes) {
 		this.imagenes = imagenes;
 	}
 	public String getCodigoMat() {

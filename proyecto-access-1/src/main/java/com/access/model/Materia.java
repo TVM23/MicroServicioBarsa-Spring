@@ -1,5 +1,6 @@
 package com.access.model;
 
+import java.util.List;
 
 public class Materia {
     
@@ -15,8 +16,10 @@ public class Materia {
     private Integer CantXUnidad;
     private String Proceso;
     private Boolean Borrado;
+    private List<Imagen> imagenes; 
     
-    public Materia() {}
+    
+	public Materia() {}
 
 	public String getCodigoMat() {
 		return codigoMat;
@@ -90,7 +93,13 @@ public class Materia {
 	public void setBorrado(Boolean borrado) {
 		Borrado = borrado;
 	}
-	
+	public List<Imagen> getImagenes() {
+		return imagenes;
+	}
+	public void setImagenes(List<Imagen> imagenes) {
+		this.imagenes = imagenes;
+	}
+
 
     
     // Getters and Setters

@@ -50,8 +50,7 @@ public class MateriaListener {
   	          "materia-codigo-response",
   	           request -> {
   	             String codigo = objectMapper.convertValue(request.get("data"), String.class);
-  	             return materiaService.getMateriasByCodigoMat(codigo);
-
+  	             return materiaService.getMateriaByCodigo(codigo);
   	           }
   	    );
     } 
@@ -64,6 +63,30 @@ public class MateriaListener {
     			request -> {
     				CreateMateriaDTO dto = objectMapper.convertValue(request.get("data"), CreateMateriaDTO.class);
     				return materiaService.createNewMateria(dto);
+    			}
+    		);
+    }
+    
+    @KafkaListener(topics =  "put-materia-update", groupId = "materia-service-group")
+    public void updateMateria(String message) {
+    	processKafkaMessage(
+    			message, 
+    			"materia-update-response", 
+    			request -> {
+    				CreateMateriaDTO dto = objectMapper.convertValue(request.get("data"), CreateMateriaDTO.class);
+    				return materiaService.updateMateria(dto);
+    			}
+    		);
+    }
+    
+    @KafkaListener(topics = "delete-materia-borrar", groupId = "materia-service-group")
+    public void deleteMateria(String message) {
+    	processKafkaMessage(
+    			message, 
+    			"materia-delete-response", 
+    			request -> {
+    				String codigo = objectMapper.convertValue(request.get("data"), String.class);
+    				return materiaService.deleteMateria(codigo);
     			}
     		);
     }

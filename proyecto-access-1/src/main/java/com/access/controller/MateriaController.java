@@ -26,7 +26,7 @@ public class MateriaController {
 	        this.materiaService = materiaService;
 	    }
 
-	    @GetMapping
+	    /*@GetMapping
 	    public List<Materia> getAllMaterias() {
 	        return materiaService.getAllMaterias();
 	    }
@@ -44,6 +44,6 @@ public class MateriaController {
 	    @DeleteMapping(value="/{codigo}")
 	    public List<Materia> deleteMateria(@PathVariable String codigo) throws SQLException {
 	        return materiaService.deleteMateria(codigo);
-	    }
+	    }*/
 	  
 }
