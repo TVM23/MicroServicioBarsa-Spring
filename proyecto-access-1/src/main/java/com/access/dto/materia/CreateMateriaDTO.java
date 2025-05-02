@@ -9,12 +9,12 @@ public class CreateMateriaDTO {
     private String descripcion;
     private String unidad;
     private Double pcompra;
-    private Integer existencia;
-    private Integer max;
-    private Integer min;
-    private Integer inventarioInicial;
+    private Double existencia;
+    private Double max;
+    private Double min;
+    private Double inventarioInicial;
     private String unidadEntrada;
-    private Integer cantxunidad;
+    private Double cantxunidad;
     private String proceso;
     private String borrado;
     private List<ImagenDTO> imagenes; 
@@ -50,28 +50,28 @@ public class CreateMateriaDTO {
 	public void setPcompra(Double pcompra) {
 		this.pcompra = pcompra;
 	}
-	public Integer getExistencia() {
+	public Double getExistencia() {
 		return existencia;
 	}
-	public void setExistencia(Integer existencia) {
+	public void setExistencia(Double existencia) {
 		this.existencia = existencia;
 	}
-	public Integer getMax() {
+	public Double getMax() {
 		return max;
 	}
-	public void setMax(Integer max) {
+	public void setMax(Double max) {
 		this.max = max;
 	}
-	public Integer getMin() {
+	public Double getMin() {
 		return min;
 	}
-	public void setMin(Integer min) {
+	public void setMin(Double min) {
 		this.min = min;
 	}
-	public Integer getInventarioInicial() {
+	public Double getInventarioInicial() {
 		return inventarioInicial;
 	}
-	public void setInventarioInicial(Integer inventarioInicial) {
+	public void setInventarioInicial(Double inventarioInicial) {
 		this.inventarioInicial = inventarioInicial;
 	}
 	public String getUnidadEntrada() {
@@ -80,10 +80,10 @@ public class CreateMateriaDTO {
 	public void setUnidadEntrada(String unidadEntrada) {
 		this.unidadEntrada = unidadEntrada;
 	}
-	public Integer getCantxunidad() {
+	public Double getCantxunidad() {
 		return cantxunidad;
 	}
-	public void setCantxunidad(Integer cantxunidad) {
+	public void setCantxunidad(Double cantxunidad) {
 		this.cantxunidad = cantxunidad;
 	}
 	public String getProceso() {

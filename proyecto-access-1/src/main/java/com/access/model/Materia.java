@@ -8,12 +8,12 @@ public class Materia {
     private String Descripcion;
     private String Unidad;
     private Double PCompra;
-    private Integer Existencia;
-    private Integer Max;
-    private Integer Min;
-    private Integer InventarioInicial;
+    private Double Existencia;
+    private Double Max;
+    private Double Min;
+    private Double InventarioInicial;
     private String UnidadEntrada;
-    private Integer CantXUnidad;
+    private Double CantXUnidad;
     private String Proceso;
     private Boolean Borrado;
     private List<Imagen> imagenes; 
@@ -45,28 +45,28 @@ public class Materia {
 	public void setPCompra(Double pCompra) {
 		PCompra = pCompra;
 	}
-	public Integer getExistencia() {
+	public Double getExistencia() {
 		return Existencia;
 	}
-	public void setExistencia(Integer existencia) {
+	public void setExistencia(Double existencia) {
 		Existencia = existencia;
 	}
-	public Integer getMax() {
+	public Double getMax() {
 		return Max;
 	}
-	public void setMax(Integer max) {
+	public void setMax(Double max) {
 		Max = max;
 	}
-	public Integer getMin() {
+	public Double getMin() {
 		return Min;
 	}
-	public void setMin(Integer min) {
+	public void setMin(Double min) {
 		Min = min;
 	}
-	public Integer getInventarioInicial() {
+	public Double getInventarioInicial() {
 		return InventarioInicial;
 	}
-	public void setInventarioInicial(Integer inventarioInicial) {
+	public void setInventarioInicial(Double inventarioInicial) {
 		InventarioInicial = inventarioInicial;
 	}
 	public String getUnidadEntrada() {
@@ -75,10 +75,10 @@ public class Materia {
 	public void setUnidadEntrada(String unidadEntrada) {
 		UnidadEntrada = unidadEntrada;
 	}
-	public Integer getCantXUnidad() {
+	public Double getCantXUnidad() {
 		return CantXUnidad;
 	}
-	public void setCantXUnidad(Integer cantXUnidad) {
+	public void setCantXUnidad(Double cantXUnidad) {
 		CantXUnidad = cantXUnidad;
 	}
 	public String getProceso() {

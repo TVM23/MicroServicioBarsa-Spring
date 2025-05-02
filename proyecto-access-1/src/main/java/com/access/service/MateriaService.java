@@ -1,8 +1,10 @@
 package com.access.service;
 
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -11,10 +13,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.access.dto.ImagenDTO;
 import com.access.dto.PaginationResult;
+import com.access.dto.inventario.InventarioItemDTO;
+import com.access.dto.inventario.InventarioSalidaDTO;
 import com.access.dto.materia.CreateMateriaDTO;
 import com.access.dto.materia.MateriaPaginationDTO;
 import com.access.model.Imagen;
@@ -28,9 +34,11 @@ public class MateriaService {
 	  @Autowired
 	  private CloudinaryService cloudinaryService;
 	  private final JdbcTemplate jdbcTemplate;
+	  private final PapeletaService papeletaService;
 	  	  
-	    public MateriaService(JdbcTemplate jdbcTemplate) {
+	    public MateriaService(JdbcTemplate jdbcTemplate, PapeletaService papeletaService) {
 	        this.jdbcTemplate = jdbcTemplate;
+	        this.papeletaService = papeletaService;
 	    }
 	    
 	    private Materia convert(ResultSet rs) throws SQLException {
@@ -39,12 +47,12 @@ public class MateriaService {
 	            materia.setUnidad(rs.getString("Unidad"));
 	            materia.setDescripcion(rs.getString("Descripcion"));
 	            materia.setPCompra(rs.getDouble("PCompra"));
-	            materia.setExistencia(rs.getInt("Existencia"));
-	            materia.setMax(rs.getInt("Max"));
-	            materia.setMin(rs.getInt("Min"));
-	            materia.setInventarioInicial(rs.getInt("InventarioInicial"));
+	            materia.setExistencia(rs.getDouble("Existencia"));
+	            materia.setMax(rs.getDouble("Max"));
+	            materia.setMin(rs.getDouble("Min"));
+	            materia.setInventarioInicial(rs.getDouble("InventarioInicial"));
 	            materia.setUnidadEntrada(rs.getString("UnidadEntrada"));
-	            materia.setCantXUnidad(rs.getInt("CantXUnidad"));
+	            materia.setCantXUnidad(rs.getDouble("CantXUnidad"));
 	            materia.setProceso(rs.getString("Proceso"));
 	            materia.setBorrado(rs.getBoolean("Borrado"));
 	            materia.setImagenes(this.getImagenesMateria(materia.getCodigoMat()));
@@ -90,8 +98,8 @@ public class MateriaService {
 		    List<Object> params = new ArrayList<>(); // Lista para almacenar los parámetros
 	        
 	        if (dto.getCodigoMat() != null) {
-	            sql.append(" AND CodigoMat = ?");
-		        params.add(dto.getCodigoMat());
+	            sql.append(" AND CodigoMat LIKE ?");
+		        params.add("%" + dto.getCodigoMat() + "%");
 	        }
 	        if (dto.getDescripcion() != null) {
 	            sql.append(" AND Descripcion LIKE ?");
@@ -159,7 +167,6 @@ public class MateriaService {
 			                jdbcTemplate.update(sqlImg, dto.getCodigoMat(), img.getUrl(), img.getPublic_id());
 			            }
 		            }
-			        
 			        return ResponseEntity.ok(Map.of("message", "Materia creada correctamente"));
 		    	}else {
 		    		this.deleteImagesDueError(dto);
@@ -177,8 +184,7 @@ public class MateriaService {
 	    }
 	    
 	    public ResponseEntity<?> updateMateria(CreateMateriaDTO dto) {
-	    	List<Materia> materia = getMateriaByCodigo(dto.getCodigoMat());
-	    	if(!materia.isEmpty()) {
+	    	if(!getMateriaByCodigo(dto.getCodigoMat()).isEmpty()) {
 	    		List<Materia> mat = getMateriaByDescripcion(dto.getDescripcion());
 		    	if(mat.isEmpty() || ( mat.size() == 1 && mat.get(0).getCodigoMat().equals(dto.getCodigoMat()) ) ) {
 		    		
@@ -263,4 +269,66 @@ public class MateriaService {
 	            cloudinaryService.deleteImageCloudinary(public_id);
 	        }
 	    }
+
+	    @Transactional
+	    public ResponseEntity<?> createSalidaInventario(InventarioSalidaDTO dto) {
+	        if (papeletaService.getPapeletasByFolio(dto.getFolio()).isEmpty()) {
+	            return ResponseEntity
+	                .status(HttpStatus.BAD_REQUEST)
+	                .body(Map.of("error", "Este folio de papeleta no existe"));
+	        }
+
+	        // Validación de existencia
+	        for (InventarioItemDTO item : dto.getItems()) {
+	            List<Materia> materia = getMateriaByCodigo(item.getCodigo());
+	            if (materia.isEmpty()) {
+	                return ResponseEntity
+	                    .status(HttpStatus.BAD_REQUEST)
+	                    .body(Map.of("error", "La materia con el código " + item.getCodigo() + " no existe"));
+	            }
+
+	            if (materia.get(0).getExistencia() < item.getCantidad()) {
+	                return ResponseEntity
+	                    .status(HttpStatus.BAD_REQUEST)
+	                    .body(Map.of("error", "Cantidad insuficiente para la materia con código " + item.getCodigo()));
+	            }
+	        }
+
+	        // Insertar InventarioSalida
+	        String sqlSalida = "INSERT INTO Inventario_Salida (Folio, Fecha, Razon, Destino, Notas, Usuario) VALUES (?, ?, ?, ?, ?, ?)";
+	        GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
+
+	        jdbcTemplate.update(connection -> {
+	            PreparedStatement ps = connection.prepareStatement(sqlSalida, Statement.RETURN_GENERATED_KEYS);
+	            ps.setInt(1, dto.getFolio());
+	            ps.setString(2, dto.getFecha());
+	            ps.setString(3, dto.getReason());
+	            ps.setString(4, dto.getDestination());
+	            ps.setString(5, dto.getNotes());
+	            ps.setString(6, dto.getCreatedBy());
+	            return ps;
+	        }, keyHolder);
+
+	        Long idSalida = keyHolder.getKey().longValue();
+
+	        // Insertar detalles
+	        String sqlDetalle = "INSERT INTO Detalle_Inventario_Salida (Codigo, Cantidad, Id_Salida) VALUES (?, ?, ?)";
+
+	        for (InventarioItemDTO item : dto.getItems()) {
+	            jdbcTemplate.update(sqlDetalle,
+	                item.getCodigo(),
+	                item.getCantidad(),
+	                idSalida
+	            );
+
+	            // Opcional: actualizar existencia en Materia
+	            jdbcTemplate.update("UPDATE Materia SET Existencia = Existencia - ? WHERE CodigoMat = ?",
+	                item.getCantidad(),
+	                item.getCodigo()
+	            );
+	        }
+
+	        return ResponseEntity.ok(Map.of("message", "Inventario de salida creado exitosamente"));
+	    }
+
 }
