@@ -79,16 +79,4 @@ public class MateriaListener extends BaseKafkaListener {
     		);
     }
     
-    @KafkaListener(topics = "post-salida-crear", groupId = "materia-service-group")
-    public void creatFicha(String message) {
-    	processKafkaMessage(
-    			message, 
-    			"inventario_salidas-create-response", 
-    			request -> {
-    				InventarioSalidaDTO dto = objectMapper.convertValue(request.get("data"), InventarioSalidaDTO.class);
-    				return materiaService.createSalidaInventario(dto);
-    			}
-    		);
-    }
-    
 }
