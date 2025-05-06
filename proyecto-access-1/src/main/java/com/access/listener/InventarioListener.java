@@ -4,6 +4,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
+import com.access.dto.inventario.EntradasPaginationDTO;
 import com.access.dto.inventario.InventarioEntradaDTO;
 import com.access.dto.inventario.InventarioSalidaDTO;
 import com.access.service.InventarioService;
@@ -37,6 +38,18 @@ public class InventarioListener extends BaseKafkaListener {
     			request -> {
     				InventarioEntradaDTO dto = objectMapper.convertValue(request.get("data"), InventarioEntradaDTO.class);
     				return inventarioService.createEntradaInventario(dto);
+    			}
+    		);
+    }
+    
+    @KafkaListener(topics = "get-inventario-entradas", groupId = "materia-service-group")
+    public void getListadoEntrada(String message) {
+    	processKafkaMessage(
+    			message, 
+    			"inventario_entradas-pagination-response", 
+    			request -> {
+    				EntradasPaginationDTO dto = objectMapper.convertValue(request.get("data"), EntradasPaginationDTO.class);
+    				return inventarioService.getListadoEntrada(dto);
     			}
     		);
     }

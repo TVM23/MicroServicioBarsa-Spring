@@ -1,9 +1,5 @@
 package com.access.dto.materia;
 
-import javax.validation.constraints.Positive;
-import lombok.Getter;
-import lombok.Setter;
-
 public class MateriaPaginationDTO {
 
     private int page;
