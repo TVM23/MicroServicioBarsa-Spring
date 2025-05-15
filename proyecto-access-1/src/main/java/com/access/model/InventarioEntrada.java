@@ -5,12 +5,19 @@ import java.util.List;
 public class InventarioEntrada {
 	private Integer id;
 	private Integer proveedorId;
+	private String proveedorNombre;
 	private String fecha;
 	private Double montoTotal;
 	private String notas;
 	private String usuario;
 	private List<InventarioEntradaDetalle> detalle;
 	
+	public String getProveedorNombre() {
+		return proveedorNombre;
+	}
+	public void setProveedorNombre(String proveedorNombre) {
+		this.proveedorNombre = proveedorNombre;
+	}
 	public Integer getId() {
 		return id;
 	}

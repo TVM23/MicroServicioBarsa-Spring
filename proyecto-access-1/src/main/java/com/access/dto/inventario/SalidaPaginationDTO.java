@@ -1,30 +1,19 @@
 package com.access.dto.inventario;
 
-public class EntradasPaginationDTO {
+public class SalidaPaginationDTO {
 	private Integer page;
     private Integer limit;
 	private String fechaInicio;
     private String fechaFin;
     private Integer id;
-    private Integer proveedorId;
-    private String proveedorNombre;
-    private String codigoMat;
-    private String descripcion;
+    private Integer folio;
+    private String razon;
+    private String destino;
     private String notes;
     private String usuario;
+    private String codigoMat;
+    private String descripcion;
     
-	public String getProveedorNombre() {
-		return proveedorNombre;
-	}
-	public void setProveedorNombre(String proveedorNombre) {
-		this.proveedorNombre = proveedorNombre;
-	}
-	public String getUsuario() {
-		return usuario;
-	}
-	public void setUsuario(String usuario) {
-		this.usuario = usuario;
-	}
 	public Integer getPage() {
 		return page;
 	}
@@ -36,12 +25,6 @@ public class EntradasPaginationDTO {
 	}
 	public void setLimit(Integer limit) {
 		this.limit = limit;
-	}
-	public Integer getId() {
-		return id;
-	}
-	public void setId(Integer id) {
-		this.id = id;
 	}
 	public String getFechaInicio() {
 		return fechaInicio;
@@ -55,11 +38,41 @@ public class EntradasPaginationDTO {
 	public void setFechaFin(String fechaFin) {
 		this.fechaFin = fechaFin;
 	}
-	public Integer getProveedorId() {
-		return proveedorId;
+	public Integer getId() {
+		return id;
 	}
-	public void setProveedorId(Integer proveedorId) {
-		this.proveedorId = proveedorId;
+	public void setId(Integer id) {
+		this.id = id;
+	}
+	public Integer getFolio() {
+		return folio;
+	}
+	public void setFolio(Integer folio) {
+		this.folio = folio;
+	}
+	public String getRazon() {
+		return razon;
+	}
+	public void setRazon(String razon) {
+		this.razon = razon;
+	}
+	public String getDestino() {
+		return destino;
+	}
+	public void setDestino(String destino) {
+		this.destino = destino;
+	}
+	public String getNotes() {
+		return notes;
+	}
+	public void setNotes(String notes) {
+		this.notes = notes;
+	}
+	public String getUsuario() {
+		return usuario;
+	}
+	public void setUsuario(String usuario) {
+		this.usuario = usuario;
 	}
 	public String getCodigoMat() {
 		return codigoMat;
@@ -73,10 +86,5 @@ public class EntradasPaginationDTO {
 	public void setDescripcion(String descripcion) {
 		this.descripcion = descripcion;
 	}
-	public String getNotes() {
-		return notes;
-	}
-	public void setNotes(String notes) {
-		this.notes = notes;
-	}
+    
 }

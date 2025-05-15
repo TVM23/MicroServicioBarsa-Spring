@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import com.access.dto.inventario.EntradasPaginationDTO;
 import com.access.dto.inventario.InventarioEntradaDTO;
 import com.access.dto.inventario.InventarioSalidaDTO;
+import com.access.dto.inventario.SalidaPaginationDTO;
 import com.access.service.InventarioService;
 
 @Service
@@ -37,6 +38,7 @@ public class InventarioListener extends BaseKafkaListener {
     			"inventario_entradas-create-response", 
     			request -> {
     				InventarioEntradaDTO dto = objectMapper.convertValue(request.get("data"), InventarioEntradaDTO.class);
+    				System.out.println("Antes del metodo");
     				return inventarioService.createEntradaInventario(dto);
     			}
     		);
@@ -50,6 +52,18 @@ public class InventarioListener extends BaseKafkaListener {
     			request -> {
     				EntradasPaginationDTO dto = objectMapper.convertValue(request.get("data"), EntradasPaginationDTO.class);
     				return inventarioService.getListadoEntrada(dto);
+    			}
+    		);
+    }
+    
+    @KafkaListener(topics = "get-inventario-salidas", groupId = "materia-service-group")
+    public void getListadoSalida(String message) {
+    	processKafkaMessage(
+    			message, 
+    			"inventario_salidas-pagination-response", 
+    			request -> {
+    				SalidaPaginationDTO dto = objectMapper.convertValue(request.get("data"), SalidaPaginationDTO.class);
+    				return inventarioService.getListadoSalida(dto);
     			}
     		);
     }
