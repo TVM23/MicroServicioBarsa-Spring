@@ -5,11 +5,15 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import com.access.dto.produccion.FinalizarTiempoDTO;
 import com.access.dto.produccion.IniciarTiempoDTO;
+import com.access.dto.produccion.PausarTiempoDTO;
+import com.access.dto.produccion.ReiniciarTiempoDTO;
 import com.access.model.Papeleta;
 import com.access.model.Proceso;
 import com.access.model.Tiempo;
@@ -46,24 +50,29 @@ public class ProduccionService {
    }
 	
 	public List<Proceso> getProcesoByFolio(Integer folio) {
-        String sql = "SELECT * FROM Proceso where Folio = ?";	       
+        String sql = "SELECT * FROM Proceso WHERE Folio = ?";	       
         return jdbcTemplate.query(sql, (rs, rowNum) -> {
             return convertProceso(rs);
         }, folio);
     }
 	
 	public List<Tiempo> getTiempoByFolioEtapa(Integer procesoFolio, String etapa) {
-        String sql = "SELECT * FROM Tiempo where ProcesoFolio = ? and Etapa = ?";	       
+        String sql = "SELECT * FROM Tiempo WHERE ProcesoFolio = ? AND Etapa = ?";	       
         return jdbcTemplate.query(sql, (rs, rowNum) -> {
             return convertTiempo(rs);
         }, procesoFolio, etapa);
     }
 	
 	public ResponseEntity<?> iniciarTiempo(IniciarTiempoDTO dto){
+		List<Papeleta> info = papeletaService.getPapeletasByFolio(dto.getFolio());
+		if(info.isEmpty()) {
+			return ResponseEntity
+    	            .status(HttpStatus.BAD_REQUEST)
+    	            .body(Map.of("error", "No existe ninguna papeleta con este folio para iniciar proceso"));
+		}
 		//Checa si el proceso existe, y si no esta entonces lo crea
 		List<Proceso> proceso = getProcesoByFolio(dto.getFolio());
 		if(proceso.isEmpty()) {
-			List<Papeleta> info = papeletaService.getPapeletasByFolio(dto.getFolio());
 			String sql = "INSERT INTO Proceso (Folio, TipoId, Fecha, Status) VALUES (?, ?, ?, ?)";
 	        jdbcTemplate.update(sql,
 	        		dto.getFolio(),
@@ -83,12 +92,65 @@ public class ProduccionService {
 	        		dto.getFechaInicio()
 	        		);
 		}else {
-			String sql = "UPDATE Tiempo SET IsRunning = 1 WHERE ProcesoFolio = ? and Etapa = ?";
+			String sql = "UPDATE Tiempo SET IsRunning = 1 WHERE ProcesoFolio = ? AND Etapa = ?";
 			jdbcTemplate.update(sql,
 	        		dto.getFolio(),
 	        		dto.getEtapa()
 	        		);
 		}
-        return ResponseEntity.ok(Map.of("message", "Inicio de tiempo exitoso"));
+        return ResponseEntity.ok(Map.of("message", "Tiempo iniciado con exito"));
 	}
+	
+	public ResponseEntity<?> pausarTiempo(PausarTiempoDTO dto){
+		List <Tiempo> tiempo = getTiempoByFolioEtapa(dto.getFolio(), dto.getEtapa());
+		if(tiempo.isEmpty()) {
+			return ResponseEntity
+    	            .status(HttpStatus.BAD_REQUEST)
+    	            .body(Map.of("error", "No existe un tiempo que cumpla estos requisitos para pausar"));
+		}else {
+			String sql = "UPDATE Tiempo SET IsRunning = 0, Tiempo = ? WHERE ProcesoFolio = ? AND Etapa = ?";
+			jdbcTemplate.update(sql,
+					dto.getTiempo(),
+	        		dto.getFolio(),
+	        		dto.getEtapa()
+	        		);
+	        return ResponseEntity.ok(Map.of("message", "Tiempo pausado con exito"));
+		}
+	}
+	
+	public ResponseEntity<?> reiniciarTiempo(ReiniciarTiempoDTO dto){
+		List <Tiempo> tiempo = getTiempoByFolioEtapa(dto.getFolio(), dto.getEtapa());
+		if(tiempo.isEmpty()) {
+			return ResponseEntity
+    	            .status(HttpStatus.BAD_REQUEST)
+    	            .body(Map.of("error", "No existe un tiempo que cumpla estos requisitos para reiniciar"));
+		}else {
+			String sql = "UPDATE Tiempo SET IsRunning = 0, Tiempo = 0 WHERE ProcesoFolio = ? AND Etapa = ?";
+			jdbcTemplate.update(sql,
+	        		dto.getFolio(),
+	        		dto.getEtapa()
+	        		);
+	        return ResponseEntity.ok(Map.of("message", "Tiempo reiniciado con exito"));
+		}
+	}
+	
+	public ResponseEntity<?> finalizarTiempo(FinalizarTiempoDTO dto){
+		List <Tiempo> tiempo = getTiempoByFolioEtapa(dto.getFolio(), dto.getEtapa());
+		if(tiempo.isEmpty()) {
+			return ResponseEntity
+    	            .status(HttpStatus.BAD_REQUEST)
+    	            .body(Map.of("error", "No existe un tiempo que cumpla estos requisitos para finalizar"));
+		}else {
+			String sql = "UPDATE Tiempo SET IsRunning = 0, Tiempo = ?, IsFinished = 1, "
+					+ "FechaFin = ? WHERE ProcesoFolio = ? AND Etapa = ?";
+			jdbcTemplate.update(sql,
+					dto.getTiempo(),
+					dto.getFechaFin(),
+	        		dto.getFolio(),
+	        		dto.getEtapa()
+	        		);
+	        return ResponseEntity.ok(Map.of("message", "Tiempo finalizado con exito"));
+		}
+	}
+
 }

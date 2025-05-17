@@ -21,13 +21,11 @@ import com.access.dto.inventario.InventarioEntradaDTO;
 import com.access.dto.inventario.InventarioItemDTO;
 import com.access.dto.inventario.InventarioSalidaDTO;
 import com.access.dto.inventario.SalidaPaginationDTO;
-import com.access.model.DetallePapeleta;
 import com.access.model.InventarioEntrada;
 import com.access.model.InventarioEntradaDetalle;
 import com.access.model.InventarioSalida;
 import com.access.model.InventarioSalidaDetalle;
 import com.access.model.Materia;
-import com.access.model.Papeleta;
 
 @Service
 public class InventarioService {
@@ -216,8 +214,6 @@ public class InventarioService {
                 item.getCodigo()
             );
         }
-		System.out.println("Hizo la insercion en la tabla del Detalle");
-
 
         return ResponseEntity.ok(Map.of("message", "Entrada de inventario creada exitosamente"));
     }
