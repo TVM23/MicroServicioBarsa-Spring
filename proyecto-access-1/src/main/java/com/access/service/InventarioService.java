@@ -1,9 +1,12 @@
 package com.access.service;
 
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -16,16 +19,21 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.access.dto.PaginationResult;
+import com.access.dto.inventario.DetalleMovMateriaDTO;
 import com.access.dto.inventario.EntradasPaginationDTO;
 import com.access.dto.inventario.InventarioEntradaDTO;
 import com.access.dto.inventario.InventarioItemDTO;
 import com.access.dto.inventario.InventarioSalidaDTO;
+import com.access.dto.inventario.MovimientoMateriaDTO;
 import com.access.dto.inventario.SalidaPaginationDTO;
+import com.access.model.DetalleMovimientoMateria;
 import com.access.model.InventarioEntrada;
 import com.access.model.InventarioEntradaDetalle;
 import com.access.model.InventarioSalida;
 import com.access.model.InventarioSalidaDetalle;
 import com.access.model.Materia;
+import com.access.model.MovimientoInventario;
+import com.access.model.MovimientoMateria;
 
 @Service
 public class InventarioService {
@@ -382,4 +390,157 @@ public class InventarioService {
 			return convertDS(rs);
 		}, id);
 	}
+	
+	
+	
+	
+	
+	
+	private MovimientoMateria convertMat(ResultSet rs) throws SQLException{
+		MovimientoMateria movMat = new MovimientoMateria();
+		movMat.setConsecutivo(rs.getInt("Consecutivo"));
+		movMat.setMovId(rs.getInt("MovId"));
+		movMat.setFecha(rs.getString("Fecha"));
+		movMat.setFolio(rs.getInt("Folio"));
+		movMat.setUsuario(rs.getString("Usuario"));
+		movMat.setProcesada(rs.getBoolean("Procesada"));
+		movMat.setDetalles(
+				getDetallesMovMateria(movMat.getConsecutivo())
+				);
+		return movMat;
+	}
+	
+	private DetalleMovimientoMateria convertDetMat(ResultSet rs) throws SQLException {
+		DetalleMovimientoMateria detMovMat = new DetalleMovimientoMateria();
+		detMovMat.setId(rs.getInt("Id"));
+		detMovMat.setConsecutivo(rs.getInt("Consecutivo"));
+		detMovMat.setCodigoMat(rs.getString("CodigoMat"));
+		detMovMat.setDescripcion(rs.getString("Descripcion"));
+		detMovMat.setCantidad(rs.getDouble("Cantidad"));
+		detMovMat.setExistenciaAnterior(rs.getDouble("ExistenciaAnterior"));
+		detMovMat.setpCosto(rs.getDouble("PCosto"));
+		detMovMat.setProcesada(rs.getBoolean("Procesada"));
+		return detMovMat;
+	}
+	
+	private MovimientoInventario convertMI(ResultSet rs) throws SQLException {
+		MovimientoInventario movInv = new MovimientoInventario();
+		movInv.setMovId(rs.getInt("MovId"));
+		movInv.setDescripcion(rs.getString("Descripcion"));
+		movInv.setAumenta(rs.getBoolean("Aumenta"));
+		movInv.setBorrado(rs.getBoolean("Borrado"));
+		return movInv;
+	}
+	
+	public List<DetalleMovimientoMateria> getDetallesMovMateria(Integer consecutivo){
+		String sql = "Select dm.*, "
+				+ "m.Descripcion AS Descripcion "
+				+ "FROM Detalle_Movimiento_Materia dm "
+				+ "INNER JOIN Materia m ON dm.CodigoMat = m.CodigoMat "
+				+ "WHERE Consecutivo = ?";
+		return jdbcTemplate.query(sql, (rs, rowNum) -> {
+			return convertDetMat(rs);
+		}, consecutivo);
+	}
+	
+	public List<MovimientoInventario> getMovimientoInventarioByMovId(Integer movId){
+		String sql = "Select * "
+				+ "FROM Movimientos_Inventario "
+				+ "WHERE MovId = ?";
+		return jdbcTemplate.query(sql, (rs, rowNum) -> {
+			return convertMI(rs);
+		}, movId);
+	}
+	
+	@Transactional
+    public ResponseEntity<?> createMovimientoMateria(MovimientoMateriaDTO dto) {
+		if(dto.getFolio() != 0) {
+			if (papeletaService.getPapeletasByFolio(dto.getFolio()).isEmpty()) {
+	            return ResponseEntity
+	                .status(HttpStatus.BAD_REQUEST)
+	                .body(Map.of("error", "Este folio de papeleta no existe"));
+	        }
+		}
+
+        // Validación de existencia
+        for (DetalleMovMateriaDTO item : dto.getDetalles()) {
+            List<Materia> materia = materiaService.getMateriaByCodigo(item.getCodigoMat());
+            if (materia.isEmpty()) {
+                return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "La materia con el código " + item.getCodigoMat() + " no existe"));
+            }
+
+            /*if (materia.get(0).getExistencia() < item.getCantidad()) {
+                return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "Cantidad insuficiente para la materia con código " + item.getCodigo()));
+            }*/
+        }
+
+        // Insertar InventarioSalida
+        String sqlSalida = "INSERT INTO Movimientos_Materia (MovId, Fecha, Folio, Usuario, Procesada, Observacion, Autoriza) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
+        
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDate localDate = LocalDate.parse(dto.getFecha(), formatter);
+        Date sqlDate = java.sql.Date.valueOf(localDate);  
+
+
+        jdbcTemplate.update(connection -> {
+            PreparedStatement ps = connection.prepareStatement(sqlSalida, Statement.RETURN_GENERATED_KEYS);
+            ps.setInt(1, dto.getMovId());
+            ps.setString(2, dto.getFecha());
+            //ps.setDate(2, sqlDate);
+            ps.setInt(3, dto.getFolio());
+            ps.setString(4, dto.getUsuario());
+            ps.setBoolean(5, dto.getProcesada());
+            ps.setString(6, dto.getObservacion());
+            ps.setString(7, dto.getAutoriza());
+            return ps;
+        }, keyHolder);
+
+        Long consecutivo = keyHolder.getKey().longValue();
+     
+        // Insertar detalles
+
+        String sqlDetalle = "INSERT INTO Detalle_Movimiento_Materia (Consecutivo, CodigoMat, Cantidad, ExistenciaAnt, "
+        		+ "PCosto, Procesada) VALUES (?, ?, ?, ?, ?, ?)";
+        
+        List<MovimientoInventario> movimiento = getMovimientoInventarioByMovId(dto.getMovId());
+        if(movimiento.isEmpty()) {
+        	return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "Este tipo de movimiento de inventario no existe"));
+        }
+        Boolean aumenta = movimiento.get(0).getAumenta();        
+
+        for (DetalleMovMateriaDTO item : dto.getDetalles()) {
+
+            List<Materia> materia = materiaService.getMateriaByCodigo(item.getCodigoMat());
+            jdbcTemplate.update(sqlDetalle,
+            	consecutivo,
+                item.getCodigoMat(),
+                item.getCantidad(),
+                materia.get(0).getExistencia(),
+                materia.get(0).getPCompra(),
+                item.getProcesada()
+            );
+            
+            // Actualizar existencia en Materia
+            if(aumenta) {
+            	jdbcTemplate.update("UPDATE Materia SET Existencia = Existencia + ? WHERE CodigoMat = ?",
+                        item.getCantidad(),
+                        item.getCodigoMat()
+                    );
+            }else {
+            	jdbcTemplate.update("UPDATE Materia SET Existencia = Existencia - ? WHERE CodigoMat = ?",
+                        item.getCantidad(),
+                        item.getCodigoMat()
+                    );
+            }
+        }
+
+        return ResponseEntity.ok(Map.of("message", "Movimiento de materia generado exitosamente"));
+    }
 }

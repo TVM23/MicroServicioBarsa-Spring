@@ -4,10 +4,13 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
+import com.access.dto.produccion.DesactivarDetencionDTO;
+import com.access.dto.produccion.DetencionDTO;
 import com.access.dto.produccion.FinalizarTiempoDTO;
 import com.access.dto.produccion.IniciarTiempoDTO;
 import com.access.dto.produccion.PausarTiempoDTO;
 import com.access.dto.produccion.ReiniciarTiempoDTO;
+import com.access.dto.produccion.TiempoDTO;
 import com.access.service.ProduccionService;
 
 @Service
@@ -63,6 +66,54 @@ public class ProduccionListener extends BaseKafkaListener {
 		           request -> {
 		  	         FinalizarTiempoDTO dto = objectMapper.convertValue(request.get("data"), FinalizarTiempoDTO.class);
 		             return produccionService.finalizarTiempo(dto);
+		           }
+		     );
+	}
+	
+	@KafkaListener(topics = "post-detencion-tiempo", groupId = "materia-service-group")
+	public void detencionTiempo(String message) {
+		processKafkaMessage(
+		           message,
+		           "produccion-detencion-response",
+		           request -> {
+		  	         DetencionDTO dto = objectMapper.convertValue(request.get("data"), DetencionDTO.class);
+		             return produccionService.detencionTiempo(dto);
+		           }
+		     );
+	}
+	
+	@KafkaListener(topics = "put-desactivar-detencion", groupId = "materia-service-group")
+	public void desactivarDetencionTiempo(String message) {
+		processKafkaMessage(
+		           message,
+		           "produccion-desactivarDetencion-response",
+		           request -> {
+		  	         DesactivarDetencionDTO dto = objectMapper.convertValue(request.get("data"), DesactivarDetencionDTO.class);
+		             return produccionService.desactivarDetencionTiempo(dto);
+		           }
+		     );
+	}
+	
+	@KafkaListener(topics = "get-registro-tiempo", groupId = "materia-service-group")
+	public void obtenerTiempo(String message) {
+		processKafkaMessage(
+		           message,
+		           "produccion-getTiempo-response",
+		           request -> {
+		  	         TiempoDTO dto = objectMapper.convertValue(request.get("data"), TiempoDTO.class);
+		             return produccionService.obtenerTiempo(dto);
+		           }
+		     );
+	}
+	
+	@KafkaListener(topics = "get-registro-detencion", groupId = "materia-service-group")
+	public void obtenerDetencion(String message) {
+		processKafkaMessage(
+		           message,
+		           "produccion-getDetencion-response",
+		           request -> {
+		  	         TiempoDTO dto = objectMapper.convertValue(request.get("data"), TiempoDTO.class);
+		             return produccionService.obtenerDetencion(dto);
 		           }
 		     );
 	}

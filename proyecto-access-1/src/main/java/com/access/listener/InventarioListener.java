@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import com.access.dto.inventario.EntradasPaginationDTO;
 import com.access.dto.inventario.InventarioEntradaDTO;
 import com.access.dto.inventario.InventarioSalidaDTO;
+import com.access.dto.inventario.MovimientoMateriaDTO;
 import com.access.dto.inventario.SalidaPaginationDTO;
 import com.access.service.InventarioService;
 
@@ -67,5 +68,29 @@ public class InventarioListener extends BaseKafkaListener {
     			}
     		);
     }
+    
+    
+    
+    
+    
+    @KafkaListener(topics = "post-movimiento-materia", groupId = "materia-service-group")
+    public void createMovimientoMateria(String message) {
+    	processKafkaMessage(
+    			message, 
+    			"inventario-movimiento_materia-response", 
+    			request -> {
+    				try {
+    					Object data = request.get("data");
+    					MovimientoMateriaDTO dto = objectMapper.convertValue(data, MovimientoMateriaDTO.class);
+    					return inventarioService.createMovimientoMateria(dto);
+    				} catch (Exception e) {
+    					System.err.println("Error al convertir DTO: " + e.getMessage());
+    					e.printStackTrace();
+    					throw e;
+    				}
+    			}
+    		);
+    }
+    
 
 }

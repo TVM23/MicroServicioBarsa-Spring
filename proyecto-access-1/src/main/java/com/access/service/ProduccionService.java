@@ -10,10 +10,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import com.access.dto.produccion.DesactivarDetencionDTO;
+import com.access.dto.produccion.DetencionDTO;
 import com.access.dto.produccion.FinalizarTiempoDTO;
 import com.access.dto.produccion.IniciarTiempoDTO;
 import com.access.dto.produccion.PausarTiempoDTO;
 import com.access.dto.produccion.ReiniciarTiempoDTO;
+import com.access.dto.produccion.TiempoDTO;
+import com.access.model.Detencion;
 import com.access.model.Papeleta;
 import com.access.model.Proceso;
 import com.access.model.Tiempo;
@@ -42,11 +46,24 @@ public class ProduccionService {
 			tiempo.setId(rs.getInt("Id"));
 			tiempo.setProcesoFolio(rs.getInt("ProcesoFolio"));
 			tiempo.setEtapa(rs.getString("Etapa"));
+			tiempo.setTiempo(rs.getInt("Tiempo"));
 			tiempo.setFechaInicio(rs.getLong("FechaInicio"));
 			tiempo.setFechaFin(rs.getLong("FechaFin"));
 			tiempo.setIsRunning(rs.getBoolean("IsRunning"));
 			tiempo.setIsFinished(rs.getBoolean("IsFinished"));
 			return tiempo;
+   }
+	
+	private Detencion convertDetencion(ResultSet rs) throws SQLException {
+		Detencion detencion = new Detencion();
+			detencion.setId(rs.getInt("Id"));
+			detencion.setFolio(rs.getInt("Folio"));
+			detencion.setTiempoId(rs.getInt("TiempoId"));
+			detencion.setEtapa(rs.getString("Etapa"));
+			detencion.setMotivo(rs.getString("Motivo"));
+			detencion.setFecha(rs.getLong("Fecha"));
+			detencion.setActiva(rs.getBoolean("Activa"));
+			return detencion;
    }
 	
 	public List<Proceso> getProcesoByFolio(Integer folio) {
@@ -60,6 +77,13 @@ public class ProduccionService {
         String sql = "SELECT * FROM Tiempo WHERE ProcesoFolio = ? AND Etapa = ?";	       
         return jdbcTemplate.query(sql, (rs, rowNum) -> {
             return convertTiempo(rs);
+        }, procesoFolio, etapa);
+    }
+	
+	public List<Detencion> getDetencionesByFolioEtapa(Integer procesoFolio, String etapa) {
+        String sql = "SELECT * FROM Detencion WHERE Folio = ? AND Etapa = ?";	       
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+            return convertDetencion(rs);
         }, procesoFolio, etapa);
     }
 	
@@ -151,6 +175,61 @@ public class ProduccionService {
 	        		);
 	        return ResponseEntity.ok(Map.of("message", "Tiempo finalizado con exito"));
 		}
+	}
+	
+	public ResponseEntity<?> detencionTiempo(DetencionDTO dto){
+		List <Tiempo> tiempo = getTiempoByFolioEtapa(dto.getFolio(), dto.getEtapa());
+		if(tiempo.isEmpty()) {
+			return ResponseEntity
+    	            .status(HttpStatus.BAD_REQUEST)
+    	            .body(Map.of("error", "No existe un tiempo que cumpla estos requisitos para detener"));
+		}else {
+			String sql = "UPDATE Tiempo SET IsRunning = 0, Tiempo = ? "
+					+ "WHERE ProcesoFolio = ? AND Etapa = ?";
+			jdbcTemplate.update(sql,
+					dto.getTiempo(),
+	        		dto.getFolio(),
+	        		dto.getEtapa()
+	        		);
+			String sql2 = "INSERT INTO Detencion (Folio, TiempoId, Etapa, Motivo, Fecha, "
+					+ "Activa) VALUES (?, ?, ?, ?, ?, 1)";
+			jdbcTemplate.update(sql2,
+	        		dto.getFolio(),
+	        		tiempo.get(0).getId(),
+	        		dto.getEtapa(),
+	        		dto.getMotivo(),
+	        		dto.getFecha()
+	        		);
+	        return ResponseEntity.ok(Map.of("message", "Tiempo detenido con exito"));
+		}
+	}
+	
+	public ResponseEntity<?> desactivarDetencionTiempo(DesactivarDetencionDTO dto){
+		List <Detencion> detenciones = getDetencionesByFolioEtapa(dto.getFolio(), dto.getEtapa());
+		if(detenciones.isEmpty()) {
+			return ResponseEntity
+    	            .status(HttpStatus.BAD_REQUEST)
+    	            .body(Map.of("error", "No existe ninguna detencion que cumpla estos requisitos"));
+		}else {
+			String sql = "UPDATE Detencion SET Activa = 0 "
+					+ "WHERE Folio = ? AND Etapa = ? AND Id = ?";
+			jdbcTemplate.update(sql,
+	        		dto.getFolio(),
+	        		dto.getEtapa(),
+	        		detenciones.get(detenciones.size() - 1).getId()
+	        		);
+	        return ResponseEntity.ok(Map.of("message", "Detencion desactivada con exito"));
+		}
+	}
+	
+	public List<Tiempo> obtenerTiempo(TiempoDTO dto){
+		List <Tiempo> tiempo = getTiempoByFolioEtapa(dto.getFolio(), dto.getEtapa());
+		return tiempo;
+	}
+	
+	public List<Detencion> obtenerDetencion(TiempoDTO dto){
+		List <Detencion> detencion = getDetencionesByFolioEtapa(dto.getFolio(), dto.getEtapa());
+		return detencion;
 	}
 
 }
