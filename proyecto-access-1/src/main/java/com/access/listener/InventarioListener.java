@@ -4,11 +4,10 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
-import com.access.dto.inventario.EntradasPaginationDTO;
-import com.access.dto.inventario.InventarioEntradaDTO;
-import com.access.dto.inventario.InventarioSalidaDTO;
 import com.access.dto.inventario.MovimientoMateriaDTO;
-import com.access.dto.inventario.SalidaPaginationDTO;
+import com.access.dto.inventario.MovimientosDTO;
+import com.access.dto.inventario.MovimientoMateriaPagiDto;
+import com.access.dto.inventario.MovimientoProductoPagiDTO;
 import com.access.service.InventarioService;
 
 @Service
@@ -20,57 +19,43 @@ public class InventarioListener extends BaseKafkaListener {
         this.inventarioService = inventarioService;
     }
     
-    @KafkaListener(topics = "post-salida-crear", groupId = "materia-service-group")
-    public void crearFichaSalida(String message) {
+    @KafkaListener(topics = "get-movimiento-materia", groupId = "materia-service-group")
+    public void getListadoMovMateria(String message) {
     	processKafkaMessage(
     			message, 
-    			"inventario_salidas-create-response", 
+    			"inventario-movimiento_materia-pagination-response", 
     			request -> {
-    				InventarioSalidaDTO dto = objectMapper.convertValue(request.get("data"), InventarioSalidaDTO.class);
-    				return inventarioService.createSalidaInventario(dto);
+    				try {
+    					Object data = request.get("data");
+    					MovimientoMateriaPagiDto dto = objectMapper.convertValue(data, MovimientoMateriaPagiDto.class);
+        				return inventarioService.getListadoMovMateria(dto);
+    				} catch (Exception e) {
+    					System.err.println("Error en el servicio: " + e.getMessage());
+    					e.printStackTrace();
+    					throw e;
+    				}
     			}
     		);
     }
     
-    @KafkaListener(topics = "post-entrada-crear", groupId = "materia-service-group")
-    public void creatFichaEntrada(String message) {
+    @KafkaListener(topics = "get-movimiento-producto", groupId = "materia-service-group")
+    public void getListadoMovProducto(String message) {
     	processKafkaMessage(
     			message, 
-    			"inventario_entradas-create-response", 
+    			"inventario-movimiento_producto-pagination-response", 
     			request -> {
-    				InventarioEntradaDTO dto = objectMapper.convertValue(request.get("data"), InventarioEntradaDTO.class);
-    				System.out.println("Antes del metodo");
-    				return inventarioService.createEntradaInventario(dto);
+    				try {
+    					Object data = request.get("data");
+    					MovimientoProductoPagiDTO dto = objectMapper.convertValue(data, MovimientoProductoPagiDTO.class);
+        				return inventarioService.getListadoMovProducto(dto);
+    				} catch (Exception e) {
+    					System.err.println("Error en el servicio: " + e.getMessage());
+    					e.printStackTrace();
+    					throw e;
+    				}
     			}
     		);
     }
-    
-    @KafkaListener(topics = "get-inventario-entradas", groupId = "materia-service-group")
-    public void getListadoEntrada(String message) {
-    	processKafkaMessage(
-    			message, 
-    			"inventario_entradas-pagination-response", 
-    			request -> {
-    				EntradasPaginationDTO dto = objectMapper.convertValue(request.get("data"), EntradasPaginationDTO.class);
-    				return inventarioService.getListadoEntrada(dto);
-    			}
-    		);
-    }
-    
-    @KafkaListener(topics = "get-inventario-salidas", groupId = "materia-service-group")
-    public void getListadoSalida(String message) {
-    	processKafkaMessage(
-    			message, 
-    			"inventario_salidas-pagination-response", 
-    			request -> {
-    				SalidaPaginationDTO dto = objectMapper.convertValue(request.get("data"), SalidaPaginationDTO.class);
-    				return inventarioService.getListadoSalida(dto);
-    			}
-    		);
-    }
-    
-    
-    
     
     
     @KafkaListener(topics = "post-movimiento-materia", groupId = "materia-service-group")
@@ -84,7 +69,26 @@ public class InventarioListener extends BaseKafkaListener {
     					MovimientoMateriaDTO dto = objectMapper.convertValue(data, MovimientoMateriaDTO.class);
     					return inventarioService.createMovimientoMateria(dto);
     				} catch (Exception e) {
-    					System.err.println("Error al convertir DTO: " + e.getMessage());
+    					System.err.println("Error en el servicio: " + e.getMessage());
+    					e.printStackTrace();
+    					throw e;
+    				}
+    			}
+    		);
+    }
+    
+    @KafkaListener(topics = "post-movimiento-producto", groupId = "materia-service-group")
+    public void createMovimientoProducto(String message) {
+    	processKafkaMessage(
+    			message, 
+    			"inventario-movimiento_producto-response", 
+    			request -> {
+    				try {
+    					Object data = request.get("data");
+    					MovimientosDTO dto = objectMapper.convertValue(data, MovimientosDTO.class);
+    					return inventarioService.createMovimientoProducto(dto);
+    				} catch (Exception e) {
+    					System.err.println("Error en el servicio: " + e.getMessage());
     					e.printStackTrace();
     					throw e;
     				}

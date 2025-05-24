@@ -19,8 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.access.dto.ImagenDTO;
 import com.access.dto.PaginationResult;
-import com.access.dto.inventario.InventarioItemDTO;
-import com.access.dto.inventario.InventarioSalidaDTO;
 import com.access.dto.materia.CreateMateriaDTO;
 import com.access.dto.materia.MateriaPaginationDTO;
 import com.access.model.Imagen;

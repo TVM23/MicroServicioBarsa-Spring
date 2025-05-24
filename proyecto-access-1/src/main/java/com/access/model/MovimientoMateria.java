@@ -10,8 +10,15 @@ public class MovimientoMateria {
 	private Integer folio;
 	private String usuario;
 	private Boolean procesada;
+	private String observacion;
 	private List<DetalleMovimientoMateria> detalles;
 	
+	public String getObservacion() {
+		return observacion;
+	}
+	public void setObservacion(String observacion) {
+		this.observacion = observacion;
+	}
 	public Integer getConsecutivo() {
 		return consecutivo;
 	}

@@ -35,6 +35,20 @@ public class Prod_x_ColorService {
 		return prodXcolor;
 	}
 	
+	public List<Producto_X_Color> getDetallesProductoXColor(String codigo, Integer colorId){
+		String sql = "SELECT pxc.*, p.Descripcion AS DescProd, c.Descripcion AS DescColor " +
+				"FROM Producto_X_Color pxc " +
+		        "INNER JOIN Producto p ON pxc.Codigo = p.Codigo " +
+		        "INNER JOIN Colores c ON pxc.ColorId = c.ColorId " +
+		        "WHERE pxc.Codigo = ? AND pxc.ColorId = ? LIMIT 1";
+		/*String sql = "SELECT * " +
+				"FROM Producto_X_Color " +
+		        "WHERE Codigo = ? AND ColorId = ?";*/
+		return jdbcTemplate.query(sql, (rs, rowNum) -> {
+			return convert(rs);
+		}, codigo, colorId);
+	}
+	
 	public PaginationResult<List<Producto_X_Color>> getProdColorFiltrados(ProductoxColorPaginationDTO dto) {
 	    int pageValue = dto.getPage();
 	    int limitValue = dto.getLimit();

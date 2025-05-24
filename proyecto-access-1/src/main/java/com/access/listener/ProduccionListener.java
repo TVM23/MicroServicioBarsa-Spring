@@ -117,4 +117,28 @@ public class ProduccionListener extends BaseKafkaListener {
 		           }
 		     );
 	}
+	
+	@KafkaListener(topics = "get-tiempos-folio", groupId = "materia-service-group")
+	public void getTiemposByFolio(String message) {
+		processKafkaMessage(
+		           message,
+		           "produccion-obtenerTiemposFolio-response",
+		           request -> {
+		  	         Integer procesoFolio = objectMapper.convertValue(request.get("data"), Integer.class);
+		             return produccionService.getTiemposByFolio(procesoFolio);
+		           }
+		     );
+	}
+	
+	@KafkaListener(topics = "get-ultima-detencion", groupId = "materia-service-group")
+	public void getUltimaDetencioActiva(String message) {
+		processKafkaMessage(
+		           message,
+		           "produccion-obtenerUltDetencion-response",
+		           request -> {
+		  	         Integer procesoFolio = objectMapper.convertValue(request.get("data"), Integer.class);
+		             return produccionService.getUltimaDetencioActiva(procesoFolio);
+		           }
+		     );
+	}
 }

@@ -1,6 +1,5 @@
 package com.access.listener;
 
-import com.access.dto.inventario.InventarioSalidaDTO;
 import com.access.dto.materia.CreateMateriaDTO;
 import com.access.dto.materia.MateriaPaginationDTO;
 import com.access.service.MateriaService;

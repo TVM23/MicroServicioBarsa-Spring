@@ -3,7 +3,7 @@ package com.access.model;
 public class Proceso {
 	private Integer folio;
 	private String tipoId;
-	private Long fecha;
+	private String fecha;
 	private String Status;
 	
 	public Integer getFolio() {
@@ -18,10 +18,10 @@ public class Proceso {
 	public void setTipoId(String tipoId) {
 		this.tipoId = tipoId;
 	}
-	public Long getFecha() {
+	public String getFecha() {
 		return fecha;
 	}
-	public void setFecha(Long fecha) {
+	public void setFecha(String fecha) {
 		this.fecha = fecha;
 	}
 	public String getStatus() {

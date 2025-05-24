@@ -13,7 +13,14 @@ public class DetallePapeleta {
 	private String Observacion;
 	private String NombreCliente;
 	private String NombreColor;
+	private String DescripcionProducto;
 	
+	public String getDescripcionProducto() {
+		return DescripcionProducto;
+	}
+	public void setDescripcionProducto(String descripcionProducto) {
+		DescripcionProducto = descripcionProducto;
+	}
 	public String getNombreColor() {
 		return NombreColor;
 	}

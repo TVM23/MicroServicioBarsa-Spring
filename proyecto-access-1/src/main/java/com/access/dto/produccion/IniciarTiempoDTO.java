@@ -3,7 +3,7 @@ package com.access.dto.produccion;
 public class IniciarTiempoDTO {
 	private Integer folio;
 	private String etapa;
-	private Long fechaInicio;
+	private String fechaInicio;
 	
 	public Integer getFolio() {
 		return folio;
@@ -17,10 +17,10 @@ public class IniciarTiempoDTO {
 	public void setEtapa(String etapa) {
 		this.etapa = etapa;
 	}
-	public Long getFechaInicio() {
+	public String getFechaInicio() {
 		return fechaInicio;
 	}
-	public void setFechaInicio(Long fechaInicio) {
+	public void setFechaInicio(String fechaInicio) {
 		this.fechaInicio = fechaInicio;
 	}
 }

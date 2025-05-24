@@ -3,7 +3,7 @@ package com.access.dto.produccion;
 public class DetencionDTO {
 	private Integer folio;
 	private String etapa;
-	private Long fecha;
+	private String fecha;
 	private String motivo;
 	private Integer tiempo;
 	
@@ -25,10 +25,10 @@ public class DetencionDTO {
 	public void setEtapa(String etapa) {
 		this.etapa = etapa;
 	}
-	public Long getFecha() {
+	public String getFecha() {
 		return fecha;
 	}
-	public void setFecha(Long fecha) {
+	public void setFecha(String fecha) {
 		this.fecha = fecha;
 	}
 	public String getMotivo() {

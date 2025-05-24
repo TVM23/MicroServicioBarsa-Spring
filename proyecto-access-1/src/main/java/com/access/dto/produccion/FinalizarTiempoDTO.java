@@ -3,7 +3,7 @@ package com.access.dto.produccion;
 public class FinalizarTiempoDTO {
 	private Integer folio;
 	private String etapa;
-	private Long fechaFin;
+	private String fechaFin;
 	private Integer tiempo;
 	
 	public Integer getTiempo() {
@@ -24,10 +24,10 @@ public class FinalizarTiempoDTO {
 	public void setEtapa(String etapa) {
 		this.etapa = etapa;
 	}
-	public Long getFechaFin() {
+	public String getFechaFin() {
 		return fechaFin;
 	}
-	public void setFechaFin(Long fechaFin) {
+	public void setFechaFin(String fechaFin) {
 		this.fechaFin = fechaFin;
 	}
 	

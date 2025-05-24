@@ -20,20 +20,20 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.access.dto.PaginationResult;
 import com.access.dto.inventario.DetalleMovMateriaDTO;
+import com.access.dto.inventario.DetalleMovProductoDTO;
 import com.access.dto.inventario.EntradasPaginationDTO;
-import com.access.dto.inventario.InventarioEntradaDTO;
-import com.access.dto.inventario.InventarioItemDTO;
-import com.access.dto.inventario.InventarioSalidaDTO;
 import com.access.dto.inventario.MovimientoMateriaDTO;
+import com.access.dto.inventario.MovimientoMateriaPagiDto;
+import com.access.dto.inventario.MovimientoProductoPagiDTO;
+import com.access.dto.inventario.MovimientosDTO;
 import com.access.dto.inventario.SalidaPaginationDTO;
 import com.access.model.DetalleMovimientoMateria;
-import com.access.model.InventarioEntrada;
-import com.access.model.InventarioEntradaDetalle;
-import com.access.model.InventarioSalida;
-import com.access.model.InventarioSalidaDetalle;
+import com.access.model.Detalle_Movimiento;
 import com.access.model.Materia;
 import com.access.model.MovimientoInventario;
 import com.access.model.MovimientoMateria;
+import com.access.model.Movimientos;
+import com.access.model.Producto_X_Color;
 
 @Service
 public class InventarioService {
@@ -41,369 +41,48 @@ public class InventarioService {
 	private final PapeletaService papeletaService;
 	private final MateriaService materiaService;
 	private final ProveedorService proveedorService;
+	private final Prod_x_ColorService prod_x_ColorService;
 	
-	public InventarioService(JdbcTemplate jdbcTemplate, PapeletaService papeletaService, MateriaService materiaService, ProveedorService proveedorService) {
+	public InventarioService(JdbcTemplate jdbcTemplate, PapeletaService papeletaService, MateriaService materiaService, ProveedorService proveedorService,
+			Prod_x_ColorService prod_x_ColorService) {
         this.jdbcTemplate = jdbcTemplate;
         this.papeletaService = papeletaService;
         this.materiaService = materiaService;
         this.proveedorService = proveedorService;
+        this.prod_x_ColorService = prod_x_ColorService;
     }
 	
-	private InventarioEntrada convertEntrada(ResultSet rs) throws SQLException {
-		InventarioEntrada entrada = new InventarioEntrada();
-		entrada.setId(rs.getInt("Id"));
-		entrada.setProveedorId(rs.getInt("ProveedorId"));
-		entrada.setProveedorNombre(rs.getString("ProveedorNombre"));
-		entrada.setFecha(rs.getString("Fecha"));
-		entrada.setMontoTotal(rs.getDouble("MontoTotal"));
-		entrada.setNotas(rs.getString("Notas"));
-		entrada.setUsuario(rs.getString("Usuario"));
-		entrada.setDetalle(
-				getDetallesEntrada(entrada.getId())
-				);
-		return entrada;
+	private MovimientoInventario convertMI(ResultSet rs) throws SQLException {
+		MovimientoInventario movInv = new MovimientoInventario();
+		movInv.setMovId(rs.getInt("MovId"));
+		movInv.setDescripcion(rs.getString("Descripcion"));
+		movInv.setAumenta(rs.getBoolean("Aumenta"));
+		movInv.setBorrado(rs.getBoolean("Borrado"));
+		return movInv;
 	}
 	
-	private InventarioEntradaDetalle convertDE(ResultSet rs) throws SQLException {
-		InventarioEntradaDetalle detalles = new InventarioEntradaDetalle();
-		detalles.setId(rs.getInt("Id"));
-		detalles.setCantidad(rs.getDouble("Cantidad"));
-		detalles.setCodigoMat(rs.getString("CodigoMat"));
-		detalles.setDescripcion(rs.getString("Descripcion"));
-		detalles.setPCompra(rs.getDouble("PCompra"));
-		detalles.setId_Entrada(rs.getInt("Id_Entrada"));
-		return detalles;
-	}
-	
-	private InventarioSalida convertSalida(ResultSet rs) throws SQLException {
-		InventarioSalida salida = new InventarioSalida();
-		salida.setId(rs.getInt("Id"));
-		salida.setFolio(rs.getInt("Folio"));
-		salida.setFecha(rs.getString("Fecha"));
-		salida.setRazon(rs.getString("Razon"));
-		salida.setDestino(rs.getString("Destino"));
-		salida.setNotas(rs.getString("Notas"));
-		salida.setUsuario(rs.getString("Usuario"));
-		salida.setDetalle(
-				getDetallesSalida(salida.getId())
-				);
-		return salida;
-	}
-	
-	private InventarioSalidaDetalle convertDS(ResultSet rs) throws SQLException {
-		InventarioSalidaDetalle detalles = new InventarioSalidaDetalle();
-		detalles.setId(rs.getInt("Id"));
-		detalles.setCantidad(rs.getDouble("Cantidad"));
-		detalles.setCodigoMat(rs.getString("CodigoMat"));
-		detalles.setDescripcion(rs.getString("Descripcion"));
-		detalles.setId_Salida(rs.getInt("Id_Salida"));
-		return detalles;
-	}
-	
-	@Transactional
-    public ResponseEntity<?> createSalidaInventario(InventarioSalidaDTO dto) {
-        if (papeletaService.getPapeletasByFolio(dto.getFolio()).isEmpty()) {
-            return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("error", "Este folio de papeleta no existe"));
-        }
-
-        // Validación de existencia
-        for (InventarioItemDTO item : dto.getItems()) {
-            List<Materia> materia = materiaService.getMateriaByCodigo(item.getCodigo());
-            if (materia.isEmpty()) {
-                return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "La materia con el código " + item.getCodigo() + " no existe"));
-            }
-
-            if (materia.get(0).getExistencia() < item.getCantidad()) {
-                return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "Cantidad insuficiente para la materia con código " + item.getCodigo()));
-            }
-        }
-
-        // Insertar InventarioSalida
-        String sqlSalida = "INSERT INTO Inventario_Salida (Folio, Fecha, Razon, Destino, Notas, Usuario) VALUES (?, ?, ?, ?, ?, ?)";
-        GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
-
-        jdbcTemplate.update(connection -> {
-            PreparedStatement ps = connection.prepareStatement(sqlSalida, Statement.RETURN_GENERATED_KEYS);
-            ps.setInt(1, dto.getFolio());
-            ps.setString(2, dto.getFecha());
-            ps.setString(3, dto.getReason());
-            ps.setString(4, dto.getDestination());
-            ps.setString(5, dto.getNotes());
-            ps.setString(6, dto.getCreatedBy());
-            return ps;
-        }, keyHolder);
-
-        Long idSalida = keyHolder.getKey().longValue();
-
-        // Insertar detalles
-        String sqlDetalle = "INSERT INTO Detalle_Inventario_Salida (CodigoMat, Cantidad, Id_Salida) VALUES (?, ?, ?)";
-
-        for (InventarioItemDTO item : dto.getItems()) {
-            jdbcTemplate.update(sqlDetalle,
-                item.getCodigo(),
-                item.getCantidad(),
-                idSalida
-            );
-
-            // Opcional: actualizar existencia en Materia
-            jdbcTemplate.update("UPDATE Materia SET Existencia = Existencia - ? WHERE CodigoMat = ?",
-                item.getCantidad(),
-                item.getCodigo()
-            );
-        }
-
-        return ResponseEntity.ok(Map.of("message", "Salida de inventario creado exitosamente"));
-    }
-	
-	@Transactional
-    public ResponseEntity<?> createEntradaInventario(InventarioEntradaDTO dto) {
-        if(proveedorService.getProveedorByID(dto.getProveedorId()).isEmpty()) {
-        	return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "Este proveedor no existe"));
-        }
-		System.out.println("Checo el proveedor");
-
-        // Validación de existencia
-        for (InventarioItemDTO item : dto.getItems()) {
-            List<Materia> materia = materiaService.getMateriaByCodigo(item.getCodigo());
-            if (materia.isEmpty()) {
-                return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "La materia con el código " + item.getCodigo() + " no existe"));
-            }
-        }
-		System.out.println("Checo si los materiales existen");
-
-
-        // Insertar InventarioEntrada
-        String sqlSalida = "INSERT INTO Inventario_Entrada (ProveedorId, Fecha, MontoTotal, Notas, Usuario) VALUES (?, ?, ?, ?, ?)";
-        GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
-		System.out.println("Hizo la cadena de texto insercion en la tabla del InventarioEntrada");
-
-
-        jdbcTemplate.update(connection -> {
-            PreparedStatement ps = connection.prepareStatement(sqlSalida, Statement.RETURN_GENERATED_KEYS);
-            ps.setInt(1, dto.getProveedorId());
-            ps.setString(2, dto.getFecha());
-            ps.setDouble(3, dto.getTotalAmount());
-            ps.setString(4, dto.getNotes());
-            ps.setString(5, dto.getCreatedBy());
-            return ps;
-        }, keyHolder);
-		System.out.println("Hizo la insercion en la tabla del InventarioEntrada");
-
-
-        Long idSalida = keyHolder.getKey().longValue();
-
-        // Insertar detalles
-        String sqlDetalle = "INSERT INTO Detalle_Inventario_Entrada (CodigoMat, Cantidad, PCompra, Id_Entrada) VALUES (?, ?, ?, ?)";
-
-        for (InventarioItemDTO item : dto.getItems()) {
-            List<Materia> materia = materiaService.getMateriaByCodigo(item.getCodigo());
-            Double precio = materia.get(0).getPCompra();
-
-            jdbcTemplate.update(sqlDetalle,
-                item.getCodigo(),
-                item.getCantidad(),
-                precio,
-                idSalida
-            );
-
-            // Opcional: actualizar existencia en Materia
-            jdbcTemplate.update("UPDATE Materia SET Existencia = Existencia + ? WHERE CodigoMat = ?",
-                item.getCantidad(),
-                item.getCodigo()
-            );
-        }
-
-        return ResponseEntity.ok(Map.of("message", "Entrada de inventario creada exitosamente"));
-    }
-	
-	public PaginationResult<List<InventarioEntrada>> getListadoEntrada(EntradasPaginationDTO dto){
-		int pageValue = dto.getPage();
-        int limitValue = dto.getLimit();
-        int offset = (pageValue - 1) * limitValue;
-                
-        StringBuilder sql = new StringBuilder("FROM Inventario_Entrada ie INNER JOIN Proveedores p ON ie.ProveedorId = p.ProveedorId WHERE 1=1");
-        List<Object> params = new ArrayList<>();
-
-        if (dto.getFechaInicio() != null && dto.getFechaFin() != null) {
-            sql.append(" AND ie.Fecha BETWEEN ? AND ?");
-            params.add(dto.getFechaInicio());
-            params.add(dto.getFechaFin());
-        }
-
-        if (dto.getProveedorId() != null) {
-            sql.append(" AND ie.ProveedorId = ?");
-            params.add(dto.getProveedorId());
-        }
-        
-        if(dto.getProveedorNombre() != null) {
-        	sql.append(" AND p.Nombre LIKE ? ");
-            params.add("%" + dto.getProveedorNombre() + "%");
-        }
-
-        if (dto.getCodigoMat() != null || dto.getDescripcion() != null) {
-            sql.append(" AND ie.Id IN (SELECT die.Id_Entrada FROM Detalle_Inventario_Entrada die " +
-                       "INNER JOIN Materia m ON die.CodigoMat = m.CodigoMat WHERE 1=1");
-
-            if (dto.getCodigoMat() != null) {
-                sql.append(" AND LOWER(die.CodigoMat) LIKE ?");
-                params.add("%" + dto.getCodigoMat().toLowerCase() + "%");
-            }
-
-            if (dto.getDescripcion() != null) {
-                sql.append(" AND LOWER(m.Descripcion) LIKE ?");
-                params.add("%" + dto.getDescripcion().toLowerCase() + "%");
-            }
-
-            sql.append(")");
-        }
-        if (dto.getNotes() != null) {
-            sql.append(" AND ie.Notas LIKE ?");
-            params.add("%" + dto.getNotes() + "%");
-        }
-        
-        if (dto.getUsuario() != null) {
-            sql.append(" AND ie.Usuario LIKE ?");
-            params.add("%" + dto.getUsuario() + "%");
-        }
-
-        
-        // Conteo total
-        String countSql = "SELECT COUNT(*) AS total " + sql.toString();
-        int totalItems = jdbcTemplate.queryForObject(countSql, Integer.class, params.toArray());
-        
-        // Paginación
-        int totalPages = (int) Math.ceil((double) totalItems / limitValue);
-        String finalSql = "SELECT ie.*, p.Nombre AS ProveedorNombre " + sql.toString() + " LIMIT ? OFFSET ?";
-        params.add(limitValue);
-        params.add(offset);
-
-        List<InventarioEntrada> data = jdbcTemplate.query(finalSql, (rs, rowNum) -> {
-            return convertEntrada(rs); // tu función de conversión
-        }, params.toArray());
-        
-        return new PaginationResult<>(totalItems, totalPages, pageValue, data);
-	}
-	
-	public List<InventarioEntradaDetalle> getDetallesEntrada(Integer id){
-		String sql = "Select de.*, "
-				+ "m.Descripcion AS Descripcion "
-				+ "FROM Detalle_Inventario_Entrada de "
-				+ "INNER JOIN Materia m ON de.CodigoMat = m.CodigoMat "
-				+ "WHERE Id_Entrada = ?";
+	public List<MovimientoInventario> getMovimientoInventarioByMovId(Integer movId){
+		String sql = "Select * "
+				+ "FROM Movimientos_Inventario "
+				+ "WHERE MovId = ?";
 		return jdbcTemplate.query(sql, (rs, rowNum) -> {
-			return convertDE(rs);
-		}, id);
+			return convertMI(rs);
+		}, movId);
 	}
-	
-	
-	public PaginationResult<List<InventarioSalida>> getListadoSalida(SalidaPaginationDTO dto){
-		int pageValue = dto.getPage();
-        int limitValue = dto.getLimit();
-        int offset = (pageValue - 1) * limitValue;
-                
-        StringBuilder sql = new StringBuilder("FROM Inventario_Salida WHERE 1=1");
-        List<Object> params = new ArrayList<>();
-
-        if (dto.getFechaInicio() != null && dto.getFechaFin() != null) {
-            sql.append(" AND Fecha BETWEEN ? AND ?");
-            params.add(dto.getFechaInicio());
-            params.add(dto.getFechaFin());
-        }
-
-        if (dto.getFolio() != null) {
-            sql.append(" AND Folio = ?");
-            params.add(dto.getFolio());
-        }
-
-        if (dto.getCodigoMat() != null || dto.getDescripcion() != null) {
-            sql.append(" AND Id IN (SELECT die.Id_Salida FROM Detalle_Inventario_Salida die " +
-                       "INNER JOIN Materia m ON die.CodigoMat = m.CodigoMat WHERE 1=1");
-
-            if (dto.getCodigoMat() != null) {
-                sql.append(" AND LOWER(die.CodigoMat) LIKE ?");
-                params.add("%" + dto.getCodigoMat().toLowerCase() + "%");
-            }
-
-            if (dto.getDescripcion() != null) {
-                sql.append(" AND LOWER(m.Descripcion) LIKE ?");
-                params.add("%" + dto.getDescripcion().toLowerCase() + "%");
-            }
-
-            sql.append(")");
-        }
-        
-        if (dto.getRazon() != null) {
-            sql.append(" AND Razon LIKE ?");
-            params.add("%" + dto.getRazon() + "%");
-        }
-        
-        if (dto.getDestino() != null) {
-            sql.append(" AND Destino LIKE ?");
-            params.add("%" + dto.getDestino() + "%");
-        }
-        
-        if (dto.getNotes() != null) {
-            sql.append(" AND Notas LIKE ?");
-            params.add("%" + dto.getNotes() + "%");
-        }
-        
-        if (dto.getUsuario() != null) {
-            sql.append(" AND Usuario LIKE ?");
-            params.add("%" + dto.getUsuario() + "%");
-        }
-
-        // Conteo total
-        String countSql = "SELECT COUNT(*) AS total " + sql.toString();
-        int totalItems = jdbcTemplate.queryForObject(countSql, Integer.class, params.toArray());
-        
-        // Paginación
-        int totalPages = (int) Math.ceil((double) totalItems / limitValue);
-        String finalSql = "SELECT * " + sql.toString() + " LIMIT ? OFFSET ?";
-        params.add(limitValue);
-        params.add(offset);
-
-        List<InventarioSalida> data = jdbcTemplate.query(finalSql, (rs, rowNum) -> {
-            return convertSalida(rs); // tu función de conversión
-        }, params.toArray());
-        
-        return new PaginationResult<>(totalItems, totalPages, pageValue, data);
-	}
-	
-	
-	public List<InventarioSalidaDetalle> getDetallesSalida(Integer id){
-		String sql = "Select ds.*, "
-				+ "m.Descripcion AS Descripcion "
-				+ "FROM Detalle_Inventario_Salida ds "
-				+ "INNER JOIN Materia m ON ds.CodigoMat = m.CodigoMat "
-				+ "WHERE Id_Salida = ?";
-		return jdbcTemplate.query(sql, (rs, rowNum) -> {
-			return convertDS(rs);
-		}, id);
-	}
-	
-	
-	
-	
 	
 	
 	private MovimientoMateria convertMat(ResultSet rs) throws SQLException{
 		MovimientoMateria movMat = new MovimientoMateria();
+		List<MovimientoInventario> list = getMovimientoInventarioByMovId(rs.getInt("MovId"));
+		String descripcionMov = list.get(0).getDescripcion();
 		movMat.setConsecutivo(rs.getInt("Consecutivo"));
 		movMat.setMovId(rs.getInt("MovId"));
+		movMat.setDescripcionInventario(descripcionMov);
 		movMat.setFecha(rs.getString("Fecha"));
 		movMat.setFolio(rs.getInt("Folio"));
 		movMat.setUsuario(rs.getString("Usuario"));
 		movMat.setProcesada(rs.getBoolean("Procesada"));
+		movMat.setObservacion(rs.getString("Observacion"));
 		movMat.setDetalles(
 				getDetallesMovMateria(movMat.getConsecutivo())
 				);
@@ -417,19 +96,35 @@ public class InventarioService {
 		detMovMat.setCodigoMat(rs.getString("CodigoMat"));
 		detMovMat.setDescripcion(rs.getString("Descripcion"));
 		detMovMat.setCantidad(rs.getDouble("Cantidad"));
-		detMovMat.setExistenciaAnterior(rs.getDouble("ExistenciaAnterior"));
+		detMovMat.setExistenciaAnterior(rs.getDouble("ExistenciaAnt"));
 		detMovMat.setpCosto(rs.getDouble("PCosto"));
 		detMovMat.setProcesada(rs.getBoolean("Procesada"));
 		return detMovMat;
 	}
 	
-	private MovimientoInventario convertMI(ResultSet rs) throws SQLException {
-		MovimientoInventario movInv = new MovimientoInventario();
-		movInv.setMovId(rs.getInt("MovId"));
-		movInv.setDescripcion(rs.getString("Descripcion"));
-		movInv.setAumenta(rs.getBoolean("Aumenta"));
-		movInv.setBorrado(rs.getBoolean("Borrado"));
-		return movInv;
+	private Movimientos convertPro(ResultSet rs) throws SQLException{
+		Movimientos movProd = new Movimientos();
+		movProd.setConsecutivo(rs.getInt("Consecutivo"));
+		movProd.setMovId(rs.getInt("MovId"));
+		movProd.setFecha(rs.getString("Fecha"));
+		movProd.setFolio(rs.getInt("Folio"));
+		movProd.setUsuario(rs.getString("Usuario"));
+		movProd.setDetalles(
+				getDetallesMovProd(movProd.getConsecutivo())
+				);
+		return movProd;
+	}
+	
+	private Detalle_Movimiento convertDetPro(ResultSet rs) throws SQLException {
+		Detalle_Movimiento detMovPro = new Detalle_Movimiento();
+		detMovPro.setConsecutivo(rs.getInt("Consecutivo"));
+		detMovPro.setCodigo(rs.getString("Codigo"));
+		detMovPro.setColorId(rs.getInt("ColorId"));
+		detMovPro.setDescProd(rs.getString("DescProd"));
+		detMovPro.setDescColor(rs.getString("DescColor"));
+		detMovPro.setCantidad(rs.getInt("Cantidad"));
+		detMovPro.setNoAlmacen(rs.getInt("NoAlmacen"));
+		return detMovPro;
 	}
 	
 	public List<DetalleMovimientoMateria> getDetallesMovMateria(Integer consecutivo){
@@ -443,13 +138,17 @@ public class InventarioService {
 		}, consecutivo);
 	}
 	
-	public List<MovimientoInventario> getMovimientoInventarioByMovId(Integer movId){
-		String sql = "Select * "
-				+ "FROM Movimientos_Inventario "
-				+ "WHERE MovId = ?";
+	public List<Detalle_Movimiento> getDetallesMovProd(Integer consecutivo){
+		String sql = "Select dm.*, "
+				+ "p.Descripcion AS DescProd, "
+				+ "c.Descripcion AS DescColor "
+				+ "FROM Detalle_Movimiento dm "
+				+ "INNER JOIN Producto p ON dm.Codigo = p.Codigo "
+				+ "INNER JOIN Colores c ON dm.ColorId = c.ColorId "
+				+ "WHERE Consecutivo = ?";
 		return jdbcTemplate.query(sql, (rs, rowNum) -> {
-			return convertMI(rs);
-		}, movId);
+			return convertDetPro(rs);
+		}, consecutivo);
 	}
 	
 	@Transactional
@@ -493,7 +192,7 @@ public class InventarioService {
             ps.setString(2, dto.getFecha());
             //ps.setDate(2, sqlDate);
             ps.setInt(3, dto.getFolio());
-            ps.setString(4, dto.getUsuario());
+            ps.setString(4, dto.getUsuario().toUpperCase());
             ps.setBoolean(5, dto.getProcesada());
             ps.setString(6, dto.getObservacion());
             ps.setString(7, dto.getAutoriza());
@@ -543,4 +242,223 @@ public class InventarioService {
 
         return ResponseEntity.ok(Map.of("message", "Movimiento de materia generado exitosamente"));
     }
+	
+	@Transactional
+    public ResponseEntity<?> createMovimientoProducto(MovimientosDTO dto) {
+        // Validación de existencia
+        for (DetalleMovProductoDTO item : dto.getDetalles()) {
+            List<Producto_X_Color> prod = prod_x_ColorService.getDetallesProductoXColor(item.getCodigo(), item.getColorId());
+            if (prod.isEmpty()) {
+                return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "No existe el producto con el codigo "+item.getCodigo()+" o con el Id color "+item.getColorId()));
+            }
+
+            /*if (materia.get(0).getExistencia() < item.getCantidad()) {
+                return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "Cantidad insuficiente para la materia con código " + item.getCodigo()));
+            }*/
+        }		
+        // Insertar InventarioSalida
+        String sqlSalida = "INSERT INTO Movimientos (MovId, Fecha, Folio, Usuario) VALUES (?, ?, ?, ?)";
+        GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
+        
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDate localDate = LocalDate.parse(dto.getFecha(), formatter);
+        Date sqlDate = java.sql.Date.valueOf(localDate);  
+
+        jdbcTemplate.update(connection -> {
+            PreparedStatement ps = connection.prepareStatement(sqlSalida, Statement.RETURN_GENERATED_KEYS);
+            ps.setInt(1, dto.getMovId());
+            ps.setString(2, dto.getFecha());
+            //ps.setDate(2, sqlDate);
+            ps.setInt(3, dto.getFolio());
+            ps.setString(4, dto.getUsuario().toUpperCase());
+            return ps;
+        }, keyHolder);
+
+        Long consecutivo = keyHolder.getKey().longValue();
+             
+        // Insertar detalles
+        String sqlDetalle = "INSERT INTO Detalle_Movimiento (Consecutivo, Codigo, ColorId, Cantidad, "
+        		+ "NoAlmacen) VALUES (?, ?, ?, ?, ?)";
+        
+        List<MovimientoInventario> movimiento = getMovimientoInventarioByMovId(dto.getMovId());
+        if(movimiento.isEmpty()) {
+        	return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "Este tipo de movimiento de inventario no existe"));
+        }
+        Boolean aumenta = movimiento.get(0).getAumenta();        
+
+        for (DetalleMovProductoDTO item : dto.getDetalles()) {
+
+            jdbcTemplate.update(sqlDetalle,
+            	consecutivo,
+                item.getCodigo(),
+                item.getColorId(),
+                item.getCantidad(),
+                item.getNoAlmacen()
+            );
+            
+            // Actualizar existencia en Materia
+            if(aumenta) {
+            	jdbcTemplate.update("UPDATE Producto_X_Color SET Existencia = Existencia + ? WHERE Codigo = ? AND ColorId = ?",
+                        item.getCantidad(),
+                        item.getCodigo(),
+                        item.getColorId()
+                    );
+            }else {
+            	jdbcTemplate.update("UPDATE Producto_X_Color SET Existencia = Existencia - ? WHERE Codigo = ? AND ColorId = ?",
+                        item.getCantidad(),
+                        item.getCodigo(),
+                        item.getColorId()
+                    );
+            }
+        }
+
+        return ResponseEntity.ok(Map.of("message", "Movimiento de productos generado exitosamente"));
+    }
+	
+	public PaginationResult<List<MovimientoMateria>> getListadoMovMateria(MovimientoMateriaPagiDto dto){
+		int pageValue = dto.getPage();
+        int limitValue = dto.getLimit();
+        int offset = (pageValue - 1) * limitValue;
+                
+        StringBuilder sql = new StringBuilder("FROM Movimientos_Materia WHERE 1=1");
+        List<Object> params = new ArrayList<>();
+
+        if (dto.getFechaInicio() != null && dto.getFechaFin() != null) {
+            sql.append(" AND Fecha BETWEEN ? AND ?");
+            params.add(dto.getFechaInicio());
+            params.add(dto.getFechaFin());
+        }
+
+        if (dto.getFolio() != null) {
+            sql.append(" AND Folio = ?");
+            params.add(dto.getFolio());
+        }
+
+        if (dto.getCodigoMat() != null || dto.getDescripcion() != null) {
+            sql.append(" AND Consecutivo IN (SELECT dmm.Consecutivo FROM Detalle_Movimiento_Materia dmm " +
+                       "INNER JOIN Materia m ON dmm.CodigoMat = m.CodigoMat WHERE 1=1");
+
+            if (dto.getCodigoMat() != null) {
+                sql.append(" AND LOWER(dmm.CodigoMat) LIKE ?");
+                params.add("%" + dto.getCodigoMat().toLowerCase() + "%");
+            }
+
+            if (dto.getDescripcion() != null) {
+                sql.append(" AND LOWER(m.Descripcion) LIKE ?");
+                params.add("%" + dto.getDescripcion().toLowerCase() + "%");
+            }
+
+            sql.append(")");
+        }
+        
+        if (dto.getMovId() != null) {
+            sql.append(" AND MovId = ?");
+            params.add(dto.getMovId());
+        }
+        
+        if (dto.getConsecutivo() != null) {
+            sql.append(" AND Consecutivo = ?");
+            params.add(dto.getConsecutivo());
+        }
+        
+        if (dto.getObservacion() != null) {
+            sql.append(" AND Observacion LIKE ?");
+            params.add("%" + dto.getObservacion() + "%");
+        }
+        
+        if (dto.getUsuario() != null) {
+            sql.append(" AND Usuario LIKE ?");
+            params.add("%" + dto.getUsuario() + "%");
+        }
+
+        // Conteo total
+        String countSql = "SELECT COUNT(*) AS total " + sql.toString();
+        int totalItems = jdbcTemplate.queryForObject(countSql, Integer.class, params.toArray());
+        
+        // Paginación
+        int totalPages = (int) Math.ceil((double) totalItems / limitValue);
+        String finalSql = "SELECT * " + sql.toString() + " LIMIT ? OFFSET ?";
+        params.add(limitValue);
+        params.add(offset);
+
+        List<MovimientoMateria> data = jdbcTemplate.query(finalSql, (rs, rowNum) -> {
+            return convertMat(rs); // tu función de conversión
+        }, params.toArray());
+        
+        return new PaginationResult<>(totalItems, totalPages, pageValue, data);
+	}
+	
+	public PaginationResult<List<Movimientos>> getListadoMovProducto(MovimientoProductoPagiDTO dto){
+		int pageValue = dto.getPage();
+        int limitValue = dto.getLimit();
+        int offset = (pageValue - 1) * limitValue;
+                
+        StringBuilder sql = new StringBuilder("FROM Movimientos WHERE 1=1");
+        List<Object> params = new ArrayList<>();
+
+        if (dto.getFechaInicio() != null && dto.getFechaFin() != null) {
+            sql.append(" AND Fecha BETWEEN ? AND ?");
+            params.add(dto.getFechaInicio());
+            params.add(dto.getFechaFin());
+        }
+
+        if (dto.getFolio() != null) {
+            sql.append(" AND Folio = ?");
+            params.add(dto.getFolio());
+        }
+
+        if (dto.getCodigo() != null || dto.getDescripcion() != null) {
+            sql.append(" AND Consecutivo IN (SELECT dmp.Consecutivo FROM Detalle_Movimiento dmp " +
+                       "INNER JOIN Producto p ON dmp.Codigo = p.Codigo WHERE 1=1");
+
+            if (dto.getCodigo() != null) {
+                sql.append(" AND LOWER(dmp.Codigo) LIKE ?");
+                params.add("%" + dto.getCodigo().toLowerCase() + "%");
+            }
+
+            if (dto.getDescripcion() != null) {
+                sql.append(" AND LOWER(p.Descripcion) LIKE ?");
+                params.add("%" + dto.getDescripcion().toLowerCase() + "%");
+            }
+
+            sql.append(")");
+        }
+        
+        if (dto.getMovId() != null) {
+            sql.append(" AND MovId = ?");
+            params.add(dto.getMovId());
+        }
+        
+        if (dto.getConsecutivo() != null) {
+            sql.append(" AND Consecutivo = ?");
+            params.add(dto.getConsecutivo());
+        }
+        
+        if (dto.getUsuario() != null) {
+            sql.append(" AND Usuario LIKE ?");
+            params.add("%" + dto.getUsuario() + "%");
+        }
+
+        // Conteo total
+        String countSql = "SELECT COUNT(*) AS total " + sql.toString();
+        int totalItems = jdbcTemplate.queryForObject(countSql, Integer.class, params.toArray());
+        
+        // Paginación
+        int totalPages = (int) Math.ceil((double) totalItems / limitValue);
+        String finalSql = "SELECT * " + sql.toString() + " LIMIT ? OFFSET ?";
+        params.add(limitValue);
+        params.add(offset);
+
+        List<Movimientos> data = jdbcTemplate.query(finalSql, (rs, rowNum) -> {
+            return convertPro(rs); // tu función de conversión
+        }, params.toArray());
+        
+        return new PaginationResult<>(totalItems, totalPages, pageValue, data);
+	}
 }

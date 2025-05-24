@@ -5,8 +5,8 @@ public class Tiempo {
 	private Integer procesoFolio;
 	private String etapa;
 	private Integer tiempo;
-	private Long fechaInicio;
-	private Long fechaFin;
+	private String fechaInicio;
+	private String fechaFin;
 	private Boolean isRunning;
 	private Boolean isFinished;
 	
@@ -34,16 +34,16 @@ public class Tiempo {
 	public void setTiempo(Integer tiempo) {
 		this.tiempo = tiempo;
 	}
-	public Long getFechaInicio() {
+	public String getFechaInicio() {
 		return fechaInicio;
 	}
-	public void setFechaInicio(Long fechaInicio) {
+	public void setFechaInicio(String fechaInicio) {
 		this.fechaInicio = fechaInicio;
 	}
-	public Long getFechaFin() {
+	public String getFechaFin() {
 		return fechaFin;
 	}
-	public void setFechaFin(Long fechaFin) {
+	public void setFechaFin(String fechaFin) {
 		this.fechaFin = fechaFin;
 	}
 	public Boolean getIsRunning() {

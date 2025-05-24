@@ -36,7 +36,7 @@ public class ProduccionService {
 		Proceso proceso = new Proceso();
 			proceso.setTipoId(rs.getString("TipoId"));
 			proceso.setFolio(rs.getInt("Folio"));
-			proceso.setFecha(rs.getLong("Fecha"));
+			proceso.setFecha(rs.getString("Fecha"));
 			proceso.setStatus(rs.getString("Status"));
 			return proceso;
    }
@@ -47,8 +47,8 @@ public class ProduccionService {
 			tiempo.setProcesoFolio(rs.getInt("ProcesoFolio"));
 			tiempo.setEtapa(rs.getString("Etapa"));
 			tiempo.setTiempo(rs.getInt("Tiempo"));
-			tiempo.setFechaInicio(rs.getLong("FechaInicio"));
-			tiempo.setFechaFin(rs.getLong("FechaFin"));
+			tiempo.setFechaInicio(rs.getString("FechaInicio"));
+			tiempo.setFechaFin(rs.getString("FechaFin"));
 			tiempo.setIsRunning(rs.getBoolean("IsRunning"));
 			tiempo.setIsFinished(rs.getBoolean("IsFinished"));
 			return tiempo;
@@ -61,7 +61,7 @@ public class ProduccionService {
 			detencion.setTiempoId(rs.getInt("TiempoId"));
 			detencion.setEtapa(rs.getString("Etapa"));
 			detencion.setMotivo(rs.getString("Motivo"));
-			detencion.setFecha(rs.getLong("Fecha"));
+			detencion.setFecha(rs.getString("Fecha"));
 			detencion.setActiva(rs.getBoolean("Activa"));
 			return detencion;
    }
@@ -108,8 +108,8 @@ public class ProduccionService {
 		//Checa si el tiempo existe, si no existe lo crea y lo inicia, si ya esta, enotnces lo reanuda
 		List<Tiempo> tiempo = getTiempoByFolioEtapa(dto.getFolio(), dto.getEtapa());
 		if(tiempo.isEmpty()) {
-			String sql = "INSERT INTO Tiempo (ProcesoFolio, Etapa, Tiempo, FechaInicio, FechaFin, "
-					+ "IsRunning, IsFinished) VALUES (?, ?, 0, ?, 0, 1, 0)";
+			String sql = "INSERT INTO Tiempo (ProcesoFolio, Etapa, Tiempo, FechaInicio, "
+					+ "IsRunning, IsFinished) VALUES (?, ?, 0, ?, 1, 0)";
 			jdbcTemplate.update(sql,
 	        		dto.getFolio(),
 	        		dto.getEtapa(),
@@ -231,5 +231,19 @@ public class ProduccionService {
 		List <Detencion> detencion = getDetencionesByFolioEtapa(dto.getFolio(), dto.getEtapa());
 		return detencion;
 	}
+	
+	public List<Tiempo> getTiemposByFolio(Integer procesoFolio) {
+        String sql = "SELECT * FROM Tiempo WHERE ProcesoFolio = ? ORDER BY FechaInicio ASC";	       
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+            return convertTiempo(rs);
+        }, procesoFolio);
+    }
+	
+	public List<Detencion> getUltimaDetencioActiva(Integer procesoFolio) {
+        String sql = "SELECT * FROM Detencion WHERE Folio = ? AND Activa = 1 ORDER BY Fecha DESC LIMIT 1";	       
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+            return convertDetencion(rs);
+        }, procesoFolio);
+    }
 
 }

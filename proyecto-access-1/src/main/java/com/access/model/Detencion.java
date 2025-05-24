@@ -6,7 +6,7 @@ public class Detencion {
 	private Integer tiempoId;
 	private String etapa;
 	private String motivo;
-	private Long fecha;
+	private String fecha;
 	private Boolean activa;
 	
 	public Integer getId() {
@@ -39,10 +39,10 @@ public class Detencion {
 	public void setMotivo(String motivo) {
 		this.motivo = motivo;
 	}
-	public Long getFecha() {
+	public String getFecha() {
 		return fecha;
 	}
-	public void setFecha(Long fecha) {
+	public void setFecha(String fecha) {
 		this.fecha = fecha;
 	}
 	public Boolean getActiva() {
