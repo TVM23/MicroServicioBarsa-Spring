@@ -33,10 +33,12 @@ public class MateriaService {
 	  private CloudinaryService cloudinaryService;
 	  private final JdbcTemplate jdbcTemplate;
 	  private final PapeletaService papeletaService;
+	  private final BitacoraService bitacoraservice;
 	  	  
-	    public MateriaService(JdbcTemplate jdbcTemplate, PapeletaService papeletaService) {
+	    public MateriaService(JdbcTemplate jdbcTemplate, PapeletaService papeletaService, BitacoraService bitacoraService) {
 	        this.jdbcTemplate = jdbcTemplate;
 	        this.papeletaService = papeletaService;
+	        this.bitacoraservice = bitacoraService;
 	    }
 	    
 	    private Materia convert(ResultSet rs) throws SQLException {
@@ -136,7 +138,7 @@ public class MateriaService {
 	    }
 	    
 
-	    public ResponseEntity<?> createNewMateria(CreateMateriaDTO dto) {
+	    public ResponseEntity<?> createNewMateria(CreateMateriaDTO dto, String usuario) {
 		    if(getMateriaByDescripcion(dto.getDescripcion()).isEmpty()) {
 		    	if(getMateriaByCodigo(dto.getCodigoMat()).isEmpty()) {
 		    		
@@ -165,6 +167,7 @@ public class MateriaService {
 			                jdbcTemplate.update(sqlImg, dto.getCodigoMat(), img.getUrl(), img.getPublic_id());
 			            }
 		            }
+			        bitacoraservice.registroInventario(true, dto.getCodigoMat(), usuario, dto.getExistencia(), 0.0, null);
 			        return ResponseEntity.ok(Map.of("message", "Materia creada correctamente"));
 		    	}else {
 		    		this.deleteImagesDueError(dto);
@@ -181,10 +184,13 @@ public class MateriaService {
 	    	}
 	    }
 	    
-	    public ResponseEntity<?> updateMateria(CreateMateriaDTO dto) {
-	    	if(!getMateriaByCodigo(dto.getCodigoMat()).isEmpty()) {
+	    public ResponseEntity<?> updateMateria(CreateMateriaDTO dto, String usuario) {
+	    	List<Materia> materiaConsulta = getMateriaByCodigo(dto.getCodigoMat());
+	    	if(!materiaConsulta.isEmpty()) {
 	    		List<Materia> mat = getMateriaByDescripcion(dto.getDescripcion());
 		    	if(mat.isEmpty() || ( mat.size() == 1 && mat.get(0).getCodigoMat().equals(dto.getCodigoMat()) ) ) {
+		    		
+		    		Double existAnt = materiaConsulta.get(0).getExistencia();
 		    		
 		    		String codigo = dto.getCodigoMat();
 
@@ -221,8 +227,10 @@ public class MateriaService {
 			                jdbcTemplate.update(sqlImg, dto.getCodigoMat(), img.getUrl(), img.getPublic_id());
 			            }
 		            }
-				        
+				    
+			        bitacoraservice.registroInventario(false, dto.getCodigoMat(), usuario, dto.getExistencia(), existAnt, null);
 				    return ResponseEntity.ok(Map.of("message", "Materia actualizada correctamente"));
+				    
 		    	} else {
 		    		this.deleteImagesDueError(dto);
 		    		return ResponseEntity
@@ -237,9 +245,10 @@ public class MateriaService {
 	    	}
 	    }
 	    
-	    public ResponseEntity<?> deleteMateria(String codigo) {
+	    public ResponseEntity<?> deleteMateria(String codigo, String usuario) {
 	    	List<Materia> materia = getMateriaByCodigo(codigo);
 	    	if(!materia.isEmpty()) {
+		    	Materia mat = materia.get(0);
 	    		String sql = "UPDATE Materia set Borrado = true where CodigoMat = ?";
 		        jdbcTemplate.update(sql, codigo);
 		        
@@ -252,6 +261,7 @@ public class MateriaService {
 ;			    String sqlDelete = "DELETE FROM ImagenMateria WHERE CodigoMat = ?";
 			    jdbcTemplate.update(sqlDelete, codigo);
 			    
+		        bitacoraservice.registroInventario(false, mat.getCodigoMat(), usuario, mat.getExistencia(), mat.getExistencia(), null);
 			    return ResponseEntity.ok(Map.of("message", "Materia borrada correctamente"));
 	    	}else {
 	    		return ResponseEntity

@@ -42,14 +42,16 @@ public class InventarioService {
 	private final MateriaService materiaService;
 	private final ProveedorService proveedorService;
 	private final Prod_x_ColorService prod_x_ColorService;
+	 private final BitacoraService bitacoraservice;
 	
 	public InventarioService(JdbcTemplate jdbcTemplate, PapeletaService papeletaService, MateriaService materiaService, ProveedorService proveedorService,
-			Prod_x_ColorService prod_x_ColorService) {
+			Prod_x_ColorService prod_x_ColorService, BitacoraService bitacoraService) {
         this.jdbcTemplate = jdbcTemplate;
         this.papeletaService = papeletaService;
         this.materiaService = materiaService;
         this.proveedorService = proveedorService;
         this.prod_x_ColorService = prod_x_ColorService;
+        this.bitacoraservice = bitacoraService;
     }
 	
 	private MovimientoInventario convertMI(ResultSet rs) throws SQLException {
@@ -238,6 +240,10 @@ public class InventarioService {
                         item.getCodigoMat()
                     );
             }
+                        
+            bitacoraservice.insertBitacoraRegistro(dto.getMovId(), "Materia", dto.getFolio(), item.getCodigoMat(), dto.getUsuario().toUpperCase(), 
+            		item.getCantidad(), materia.get(0).getExistencia(), null);
+            
         }
 
         return ResponseEntity.ok(Map.of("message", "Movimiento de materia generado exitosamente"));
@@ -293,7 +299,8 @@ public class InventarioService {
         Boolean aumenta = movimiento.get(0).getAumenta();        
 
         for (DetalleMovProductoDTO item : dto.getDetalles()) {
-
+        	
+            List<Producto_X_Color> prod = prod_x_ColorService.getDetallesProductoXColor(item.getCodigo(), item.getColorId());
             jdbcTemplate.update(sqlDetalle,
             	consecutivo,
                 item.getCodigo(),
@@ -316,6 +323,10 @@ public class InventarioService {
                         item.getColorId()
                     );
             }
+            
+            bitacoraservice.insertBitacoraRegistro(dto.getMovId(), "Producto", dto.getFolio(), item.getCodigo(), dto.getUsuario().toUpperCase(), 
+            		item.getCantidad().doubleValue(), prod.get(0).getExistencia().doubleValue(), item.getColorId());
+                        
         }
 
         return ResponseEntity.ok(Map.of("message", "Movimiento de productos generado exitosamente"));

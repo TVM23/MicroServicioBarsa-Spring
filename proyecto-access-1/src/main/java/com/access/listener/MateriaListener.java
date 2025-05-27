@@ -1,8 +1,11 @@
 package com.access.listener;
 
+import com.access.dto.inventario.MovimientoMateriaPagiDto;
 import com.access.dto.materia.CreateMateriaDTO;
 import com.access.dto.materia.MateriaPaginationDTO;
 import com.access.service.MateriaService;
+
+import java.util.Map;
 
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -48,8 +51,16 @@ public class MateriaListener extends BaseKafkaListener {
     			message, 
     			"materia-create-response", 
     			request -> {
-    				CreateMateriaDTO dto = objectMapper.convertValue(request.get("data"), CreateMateriaDTO.class);
-    				return materiaService.createNewMateria(dto);
+    				// Aquí extraes ambas partes del mensaje
+    	            Map<String, Object> data = (Map<String, Object>) request.get("data");
+
+    	            // ✅ Convertir el DTO
+    	            CreateMateriaDTO dto = objectMapper.convertValue(data.get("createMateriaDto"), CreateMateriaDTO.class);
+
+    	            // ✅ Extraer el usuario
+    	            String usuario = data.get("usuario").toString();
+
+    	            return materiaService.createNewMateria(dto, usuario);
     			}
     		);
     }
@@ -59,9 +70,17 @@ public class MateriaListener extends BaseKafkaListener {
     	processKafkaMessage(
     			message, 
     			"materia-update-response", 
-    			request -> {
-    				CreateMateriaDTO dto = objectMapper.convertValue(request.get("data"), CreateMateriaDTO.class);
-    				return materiaService.updateMateria(dto);
+    			request -> {   				
+    	            try {
+        	            Map<String, Object> data = (Map<String, Object>) request.get("data");
+        	            CreateMateriaDTO dto = objectMapper.convertValue(data.get("updateMateriaDto"), CreateMateriaDTO.class);
+        	            String usuario = data.get("usuario").toString();
+        	            return materiaService.updateMateria(dto, usuario);
+    				} catch (Exception e) {
+    					System.err.println("Error en el servicio: " + e.getMessage());
+    					e.printStackTrace();
+    					throw e;
+    				}
     			}
     		);
     }
@@ -72,8 +91,16 @@ public class MateriaListener extends BaseKafkaListener {
     			message, 
     			"materia-delete-response", 
     			request -> {
-    				String codigo = objectMapper.convertValue(request.get("data"), String.class);
-    				return materiaService.deleteMateria(codigo);
+    				try {
+    					Map<String, Object> data = (Map<String, Object>) request.get("data");
+        				String codigoMat = data.get("codigoMat").toString();
+        	            String usuario = data.get("usuario").toString();
+        				return materiaService.deleteMateria(codigoMat, usuario);
+    				} catch (Exception e) {
+    					System.err.println("Error en el servicio: " + e.getMessage());
+    					e.printStackTrace();
+    					throw e;
+    				}
     			}
     		);
     }
