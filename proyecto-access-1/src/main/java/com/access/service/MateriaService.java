@@ -1,10 +1,7 @@
 package com.access.service;
 
-
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -13,9 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.access.dto.ImagenDTO;
 import com.access.dto.PaginationResult;
@@ -34,11 +29,14 @@ public class MateriaService {
 	  private final JdbcTemplate jdbcTemplate;
 	  private final PapeletaService papeletaService;
 	  private final BitacoraService bitacoraservice;
+	  private final NotificacionService notificacionService;
 	  	  
-	    public MateriaService(JdbcTemplate jdbcTemplate, PapeletaService papeletaService, BitacoraService bitacoraService) {
+	    public MateriaService(JdbcTemplate jdbcTemplate, PapeletaService papeletaService, BitacoraService bitacoraService, 
+	    		NotificacionService notificacionService) {
 	        this.jdbcTemplate = jdbcTemplate;
 	        this.papeletaService = papeletaService;
 	        this.bitacoraservice = bitacoraService;
+	        this.notificacionService = notificacionService;
 	    }
 	    
 	    private Materia convert(ResultSet rs) throws SQLException {
@@ -168,6 +166,7 @@ public class MateriaService {
 			            }
 		            }
 			        bitacoraservice.registroInventario(true, dto.getCodigoMat(), usuario, dto.getExistencia(), 0.0, null);
+			        notificacionService.evaluarNotificacion(dto.getCodigoMat());
 			        return ResponseEntity.ok(Map.of("message", "Materia creada correctamente"));
 		    	}else {
 		    		this.deleteImagesDueError(dto);
@@ -229,6 +228,7 @@ public class MateriaService {
 		            }
 				    
 			        bitacoraservice.registroInventario(false, dto.getCodigoMat(), usuario, dto.getExistencia(), existAnt, null);
+			        notificacionService.evaluarNotificacion(dto.getCodigoMat());
 				    return ResponseEntity.ok(Map.of("message", "Materia actualizada correctamente"));
 				    
 		    	} else {
@@ -262,6 +262,7 @@ public class MateriaService {
 			    jdbcTemplate.update(sqlDelete, codigo);
 			    
 		        bitacoraservice.registroInventario(false, mat.getCodigoMat(), usuario, mat.getExistencia(), mat.getExistencia(), null);
+		        notificacionService.deleteNotificacionCodigo(codigo);
 			    return ResponseEntity.ok(Map.of("message", "Materia borrada correctamente"));
 	    	}else {
 	    		return ResponseEntity
@@ -276,6 +277,13 @@ public class MateriaService {
 	            String public_id = img.getPublic_id();
 	            cloudinaryService.deleteImageCloudinary(public_id);
 	        }
+	    }
+	    
+	    public List<Materia> getMateriasNoBorradas() {
+	        String sql = "SELECT * FROM Materia where Borrado = false";	       
+	        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+	            return convert(rs);
+	        });
 	    }
 
 }

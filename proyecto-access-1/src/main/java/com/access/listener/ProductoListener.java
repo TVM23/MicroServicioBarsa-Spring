@@ -23,8 +23,14 @@ public class ProductoListener extends BaseKafkaListener {
                 message,
                 "prodxcolor-pagination-response",
                 request -> {
-                    ProductoPaginationDTO dto = objectMapper.convertValue(request.get("data"), ProductoPaginationDTO.class);
-                    return productoService.getProductosFiltrados(dto);
+                    try {
+                    	ProductoPaginationDTO dto = objectMapper.convertValue(request.get("data"), ProductoPaginationDTO.class);
+                        return productoService.getProductosFiltrados(dto);
+        			} catch (Exception e) {
+        				System.err.println("Error en el servicio: " + e.getMessage());
+        				e.printStackTrace();
+        				throw e;
+        			}
                 }
         );
 	}
@@ -35,8 +41,14 @@ public class ProductoListener extends BaseKafkaListener {
                 message,
                 "prodxcolor-pagination-response",
                 request -> {
-                    String codigo = objectMapper.convertValue(request.get("data"), String.class);
-                    return productoService.getProductoCodigo(codigo);
+                    try {
+                    	String codigo = objectMapper.convertValue(request.get("data"), String.class);
+                        return productoService.getProductoCodigo(codigo);
+        			} catch (Exception e) {
+        				System.err.println("Error en el servicio: " + e.getMessage());
+        				e.printStackTrace();
+        				throw e;
+        			}
                 }
         );
 	}

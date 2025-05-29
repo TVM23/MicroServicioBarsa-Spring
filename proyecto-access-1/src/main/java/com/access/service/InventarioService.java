@@ -42,16 +42,18 @@ public class InventarioService {
 	private final MateriaService materiaService;
 	private final ProveedorService proveedorService;
 	private final Prod_x_ColorService prod_x_ColorService;
-	 private final BitacoraService bitacoraservice;
+	private final BitacoraService bitacoraservice;
+	private final NotificacionService notificacionService;
 	
 	public InventarioService(JdbcTemplate jdbcTemplate, PapeletaService papeletaService, MateriaService materiaService, ProveedorService proveedorService,
-			Prod_x_ColorService prod_x_ColorService, BitacoraService bitacoraService) {
+			Prod_x_ColorService prod_x_ColorService, BitacoraService bitacoraService, NotificacionService notificacionService) {
         this.jdbcTemplate = jdbcTemplate;
         this.papeletaService = papeletaService;
         this.materiaService = materiaService;
         this.proveedorService = proveedorService;
         this.prod_x_ColorService = prod_x_ColorService;
-        this.bitacoraservice = bitacoraService;
+        this.bitacoraservice = bitacoraService;;
+        this.notificacionService = notificacionService;
     }
 	
 	private MovimientoInventario convertMI(ResultSet rs) throws SQLException {
@@ -243,6 +245,8 @@ public class InventarioService {
                         
             bitacoraservice.insertBitacoraRegistro(dto.getMovId(), "Materia", dto.getFolio(), item.getCodigoMat(), dto.getUsuario().toUpperCase(), 
             		item.getCantidad(), materia.get(0).getExistencia(), null);
+            
+	        notificacionService.evaluarNotificacion(item.getCodigoMat());
             
         }
 
