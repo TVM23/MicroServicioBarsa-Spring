@@ -9,7 +9,14 @@ public class Notificacion {
 	private Double existencia;
 	private String color;
 	private String fecha;
+	private String area;
 	
+	public String getArea() {
+		return area;
+	}
+	public void setArea(String area) {
+		this.area = area;
+	}
 	public Integer getId() {
 		return id;
 	}

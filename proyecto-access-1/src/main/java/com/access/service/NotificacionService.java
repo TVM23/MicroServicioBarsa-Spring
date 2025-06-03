@@ -3,6 +3,8 @@ package com.access.service;
 import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.context.annotation.Lazy;
@@ -39,6 +41,7 @@ public class NotificacionService {
 	 public void evaluarNotificacion(String codigo) {
 		    Date fechaActual = Date.valueOf(java.time.LocalDate.now());
 		    Materia materia = materiaService.getMateriaByCodigo(codigo).stream().findFirst().orElse(null);
+		    String area = "INVENTARIO";
 
 		    if (materia == null) return;
 
@@ -123,4 +126,55 @@ public class NotificacionService {
 	 }
 	 
 	 
+	 
+	 
+	 
+	 private Notificacion evaluarNotificacion(Materia materia) {
+	        double existencia = materia.getExistencia();
+	        double min = materia.getMin();
+	        double max = materia.getMax();
+	        double rango = max - min;
+
+	        String color = null;
+	        String mensaje = null;
+	        String area = "INVENTARIO";
+
+	        if (existencia <= 0) {
+	            color = "ROJO";
+	            mensaje = "URGENTE: MATERIA '" + materia.getDescripcion() + "' HA LLEGADO A NIVEL NULO";
+	        } else if (existencia <= min) {
+	            color = "NARANJA";
+	            mensaje = "ALERTA: MATERIA '" + materia.getDescripcion() + "' POR DEBAJO DEL MÍNIMO";
+	        } else if (existencia <= min + rango * 0.25) {
+	            color = "AMARILLO";
+	            mensaje = "AVISO: MATERIA '" + materia.getDescripcion() + "' ACERCÁNDOSE AL MÍNIMO";
+	        } else {
+	            return null;
+	        }
+
+	        Notificacion dto = new Notificacion();
+	        dto.setCodigo(materia.getCodigoMat());
+	        dto.setDescripcion(materia.getDescripcion());
+	        dto.setMensaje(mensaje);
+	        dto.setColor(color);
+	        dto.setExistencia(existencia);
+	        dto.setMinimo(min);
+	        dto.setFecha(LocalDate.now().toString());
+	        dto.setArea(area);
+	        return dto;
+	    }
+	 
+	 public List<Notificacion> evaluarYEnviarTodas() {
+	        List<Materia> materias = materiaService.getMateriasNoBorradas();
+	        List<Notificacion> notificaciones = new ArrayList<>();
+
+	        for (Materia materia : materias) {
+	            Notificacion dto = evaluarNotificacion(materia);
+	            if (dto != null) {
+	                notificaciones.add(dto);
+	            }
+	        }
+	        
+	        return notificaciones;
+	    }
 }

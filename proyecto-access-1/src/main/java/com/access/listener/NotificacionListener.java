@@ -4,10 +4,19 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
+import com.access.model.Notificacion;
 import com.access.service.NotificacionService;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.stereotype.Service;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 
 @Service
-public class NotificacionListener extends BaseKafkaListener {
+public class NotificacionListener extends BaseKafkaListener{
 
 	private final NotificacionService notificacionService;
 

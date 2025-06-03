@@ -166,7 +166,7 @@ public class MateriaService {
 			            }
 		            }
 			        bitacoraservice.registroInventario(true, dto.getCodigoMat(), usuario, dto.getExistencia(), 0.0, null);
-			        notificacionService.evaluarNotificacion(dto.getCodigoMat());
+			        //notificacionService.evaluarNotificacion(dto.getCodigoMat());
 			        return ResponseEntity.ok(Map.of("message", "Materia creada correctamente"));
 		    	}else {
 		    		this.deleteImagesDueError(dto);
@@ -228,7 +228,7 @@ public class MateriaService {
 		            }
 				    
 			        bitacoraservice.registroInventario(false, dto.getCodigoMat(), usuario, dto.getExistencia(), existAnt, null);
-			        notificacionService.evaluarNotificacion(dto.getCodigoMat());
+			        //notificacionService.evaluarNotificacion(dto.getCodigoMat());
 				    return ResponseEntity.ok(Map.of("message", "Materia actualizada correctamente"));
 				    
 		    	} else {
@@ -262,7 +262,7 @@ public class MateriaService {
 			    jdbcTemplate.update(sqlDelete, codigo);
 			    
 		        bitacoraservice.registroInventario(false, mat.getCodigoMat(), usuario, mat.getExistencia(), mat.getExistencia(), null);
-		        notificacionService.deleteNotificacionCodigo(codigo);
+		        //notificacionService.deleteNotificacionCodigo(codigo);
 			    return ResponseEntity.ok(Map.of("message", "Materia borrada correctamente"));
 	    	}else {
 	    		return ResponseEntity

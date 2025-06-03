@@ -246,7 +246,7 @@ public class InventarioService {
             bitacoraservice.insertBitacoraRegistro(dto.getMovId(), "Materia", dto.getFolio(), item.getCodigoMat(), dto.getUsuario().toUpperCase(), 
             		item.getCantidad(), materia.get(0).getExistencia(), null);
             
-	        notificacionService.evaluarNotificacion(item.getCodigoMat());
+	        //notificacionService.evaluarNotificacion(item.getCodigoMat());
             
         }
 
