@@ -9,7 +9,14 @@ public class Tiempo {
 	private String fechaFin;
 	private Boolean isRunning;
 	private Boolean isFinished;
+	private String usuario;
 	
+	public String getUsuario() {
+		return usuario;
+	}
+	public void setUsuario(String usuario) {
+		this.usuario = usuario;
+	}
 	public Integer getId() {
 		return id;
 	}

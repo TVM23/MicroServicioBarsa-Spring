@@ -9,6 +9,9 @@ import com.access.service.NotificacionService;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashMap;
 import java.util.List;
@@ -38,4 +41,5 @@ public class NotificacionListener extends BaseKafkaListener{
 			}
 		});
 	}
+	
 }

@@ -8,7 +8,14 @@ public class Detencion {
 	private String motivo;
 	private String fecha;
 	private Boolean activa;
+	private String usuario;
 	
+	public String getUsuario() {
+		return usuario;
+	}
+	public void setUsuario(String usuario) {
+		this.usuario = usuario;
+	}
 	public Integer getId() {
 		return id;
 	}

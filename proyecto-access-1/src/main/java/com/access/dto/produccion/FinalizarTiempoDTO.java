@@ -5,7 +5,14 @@ public class FinalizarTiempoDTO {
 	private String etapa;
 	private String fechaFin;
 	private Integer tiempo;
-	
+	private String nombreUsuario;
+
+	public String getNombreUsuario() {
+		return nombreUsuario;
+	}
+	public void setNombreUsuario(String nombreUsuario) {
+		this.nombreUsuario = nombreUsuario;
+	}
 	public Integer getTiempo() {
 		return tiempo;
 	}

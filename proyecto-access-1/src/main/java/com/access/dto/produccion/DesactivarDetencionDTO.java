@@ -3,7 +3,14 @@ package com.access.dto.produccion;
 public class DesactivarDetencionDTO {
 	private Integer folio;
 	private String etapa;
-	
+	private String nombreUsuario;
+
+	public String getNombreUsuario() {
+		return nombreUsuario;
+	}
+	public void setNombreUsuario(String nombreUsuario) {
+		this.nombreUsuario = nombreUsuario;
+	}
 	public Integer getFolio() {
 		return folio;
 	}

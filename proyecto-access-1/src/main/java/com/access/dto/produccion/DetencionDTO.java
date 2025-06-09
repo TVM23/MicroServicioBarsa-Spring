@@ -6,7 +6,14 @@ public class DetencionDTO {
 	private String fecha;
 	private String motivo;
 	private Integer tiempo;
-	
+	private String nombreUsuario;
+
+	public String getNombreUsuario() {
+		return nombreUsuario;
+	}
+	public void setNombreUsuario(String nombreUsuario) {
+		this.nombreUsuario = nombreUsuario;
+	}
 	public Integer getTiempo() {
 		return tiempo;
 	}

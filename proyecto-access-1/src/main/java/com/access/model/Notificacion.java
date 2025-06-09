@@ -3,6 +3,7 @@ package com.access.model;
 public class Notificacion {
 	private Integer id;
 	private String codigo;
+	private String etapa;
 	private String descripcion;
 	private String mensaje;
 	private Double minimo;
@@ -11,6 +12,12 @@ public class Notificacion {
 	private String fecha;
 	private String area;
 	
+	public String getEtapa() {
+		return etapa;
+	}
+	public void setEtapa(String etapa) {
+		this.etapa = etapa;
+	}
 	public String getArea() {
 		return area;
 	}
