@@ -37,7 +37,7 @@ public class BitacoraService {
 	public void insertBitacoraRegistro(Integer movId, String tipoMov, Integer folio, String codigo, String usuario, Double cantidad, Double existAnt, Integer colorId) {
 		switch (movId) {
 			case 1, 3: {
-				insertDevolucionFolio(folio, codigo, usuario, cantidad, existAnt, colorId);
+				insertDevolucionFolio(folio, codigo, usuario, cantidad, existAnt, colorId); 
 				break;
 			}
 			case 2: {
