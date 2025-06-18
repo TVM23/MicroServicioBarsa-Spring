@@ -42,7 +42,7 @@ public class BitacoraService {
 			}
 			case 2: {
 				insertDevolucionProv(codigo, usuario, cantidad, existAnt, colorId);
-				break;
+				break; 
 			}
 			case 4: {
 				insertEntradaAlmacen(codigo, usuario, cantidad, existAnt, colorId);
