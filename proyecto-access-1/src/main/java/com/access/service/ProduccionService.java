@@ -31,15 +31,13 @@ public class ProduccionService {
 	
 	private final JdbcTemplate jdbcTemplate;
 	private final PapeletaService papeletaService;
-    private final RestTemplate restTemplate;
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final BitacoraTiempoService bitacoraTiempoService;
 
 
-	public ProduccionService(JdbcTemplate jdbcTemplate, PapeletaService papeletaService, RestTemplate restTemplate, KafkaTemplate<String, Object> kafkaTemplate, BitacoraTiempoService bitacoraTiempoService) {
+	public ProduccionService(JdbcTemplate jdbcTemplate, PapeletaService papeletaService, KafkaTemplate<String, Object> kafkaTemplate, BitacoraTiempoService bitacoraTiempoService) {
 		this.jdbcTemplate = jdbcTemplate;
 		this.papeletaService = papeletaService;
-		this.restTemplate = restTemplate;
         this.kafkaTemplate = kafkaTemplate;
         this.bitacoraTiempoService = bitacoraTiempoService;
 	}

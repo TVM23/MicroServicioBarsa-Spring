@@ -5,8 +5,6 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import com.access.dto.bitacoras.BitacoraInvListadoDTO;
-import com.access.dto.bitacoras.BitacoraProdListadoDTO;
-import com.access.dto.inventario.MovimientoMateriaPagiDto;
 import com.access.service.BitacoraService;
 
 @Service
@@ -37,24 +35,4 @@ public class BitacoraListener extends BaseKafkaListener  {
     			}
     		);
     }
-	
-	@KafkaListener(topics = "get-bitacora-produccion", groupId = "materia-service-group")
-    public void getListadoBitacoraProd(String message) {
-    	processKafkaMessage(
-    			message, 
-    			"bitacora-produccion-response", 
-    			request -> {
-    				try {
-    					Object data = request.get("data");
-    					BitacoraProdListadoDTO dto = objectMapper.convertValue(data, BitacoraProdListadoDTO.class);
-        				return bitacoraService.getListadoBitacoraProd(dto);
-    				} catch (Exception e) {
-    					System.err.println("Error en el servicio: " + e.getMessage());
-    					e.printStackTrace();
-    					throw e;
-    				}
-    			}
-    		);
-    }
-
 }

@@ -43,7 +43,7 @@ public class ProductoListener extends BaseKafkaListener {
                 request -> {
                     try {
                     	String codigo = objectMapper.convertValue(request.get("data"), String.class);
-                        return productoService.getProductoCodigo(codigo);
+                        return productoService.getProductoByCodigo(codigo);
         			} catch (Exception e) {
         				System.err.println("Error en el servicio: " + e.getMessage());
         				e.printStackTrace();

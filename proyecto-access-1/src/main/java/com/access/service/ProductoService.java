@@ -1,50 +1,31 @@
 package com.access.service;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Service;
 
 import com.access.dto.PaginationResult;
 import com.access.dto.producto.ProductoPaginationDTO;
-import com.access.model.Colores;
 import com.access.model.Producto;
+import com.access.repository.ProductoRepository;
 
 @Service
 public class ProductoService {
-	  private final JdbcTemplate jdbcTemplate;
+	  private final ProductoRepository productoRepository;
 	  
-	  public ProductoService(JdbcTemplate jdbcTemplate) {
-		  this.jdbcTemplate = jdbcTemplate;
+	  public ProductoService(ProductoRepository productoRepository) {
+		  this.productoRepository = productoRepository;
+	  }
+	  	  
+	  public List<Producto> getProductoByCodigo(String codigo) {
+		  List<Producto> prod = productoRepository.getProductoByCodigo(codigo);
+	      return prod;
 	  }
 	  
-	  private Producto convert(ResultSet rs) throws SQLException {
-	    	 Producto producto = new Producto();
-	            producto.setCodigo(rs.getString("Codigo"));
-	            producto.setDescripcion(rs.getString("Descripcion"));
-	            producto.setUnidad(rs.getString("Unidad"));
-	            producto.setCosto(rs.getDouble("Costo"));
-	            producto.setVenta(rs.getDouble("Venta"));
-	            producto.setExistencia(rs.getInt("Existencia"));
-	            producto.setInventarioInicial(rs.getInt("InventarioInicial"));
-	            producto.setSueldo(rs.getDouble("Sueldo"));
-	            producto.setPrestaciones(rs.getDouble("Prestaciones"));
-	            producto.setAportaciones(rs.getDouble("Aportaciones"));
-	            producto.setDocumento(rs.getString("Documento"));
-	            producto.setEAN(rs.getString("EAN"));
-	            producto.setSKU(rs.getString("SKU"));
-	            producto.setTapices(rs.getBoolean("Tapices"));
-	            producto.setBorrado(rs.getBoolean("Borrado"));
-	            return producto;
-	    }
-	  
-	  public List<Producto> getProductoCodigo(String codigo) {
-		  String sql = "Select * FROM Producto WHERE Codigo = ?";
-		  return jdbcTemplate.query(sql, (rs, rowNum) -> convert(rs), codigo);
+	  public List<Producto> getProductoDecripcionByCodigo(String codigo) {     
+	      List<Producto> prod = productoRepository.getProductoDecripcionByCodigo(codigo);
+	      return prod;
 	  }
 	  
 	  public PaginationResult<List<Producto>> getProductosFiltrados(ProductoPaginationDTO dto) {
@@ -53,7 +34,7 @@ public class ProductoService {
 		    int offset = (pageValue - 1) * limitValue;
 
 		    // Consulta base
-		    StringBuilder sql = new StringBuilder("FROM Producto WHERE 1=1");
+		    StringBuilder sql = new StringBuilder();
 		    List<Object> params = new ArrayList<>(); // Lista para almacenar los parámetros
 
 		    // Filtros dinámicos
@@ -95,33 +76,16 @@ public class ProductoService {
 		    }
 
 		    // Contar el total de registros
-		    String countSql = "SELECT COUNT(*) AS total " + sql.toString();
-		    int totalItems = jdbcTemplate.queryForObject(countSql, Integer.class, params.toArray());
+		    int totalItems = productoRepository.contarElementosProductos(sql.toString(), params);
 
 		    // Calcular el número total de páginas
 		    int totalPages = (int) Math.ceil((double) totalItems / limitValue);
 
 		    // Consulta paginada
-		    String paginatedSql = "SELECT * " + sql.toString() + " LIMIT ? OFFSET ?";
-		    params.add(limitValue); // Agregar LIMIT como parámetro
-		    params.add(offset);     // Agregar OFFSET como parámetro
-
-		    // Ejecutar la consulta paginada
-		    List<Producto> data = jdbcTemplate.query(paginatedSql, (rs, rowNum) -> {
-		        return convert(rs);
-		    }, params.toArray());
+	        List<Producto> data = productoRepository.getProductosList(sql.toString(), params, limitValue, offset);
 
 		    // Retornar el resultado paginado
 		    return new PaginationResult<>(totalItems, totalPages, pageValue, data);
 		}
-	  
-	  
-	  public List<Producto> getProductoDecripcionByCodigo(String codigo) {
-		  String sql = "Select Descripcion FROM Producto WHERE Codigo = ?";
-	       return jdbcTemplate.query(sql, (rs, rowNum) -> {
-	           return convert(rs);
-	       }, codigo);
-	  }
-	
 
 }

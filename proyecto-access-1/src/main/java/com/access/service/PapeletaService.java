@@ -15,66 +15,41 @@ import com.access.dto.materia.MateriaPaginationDTO;
 import com.access.dto.papeleta.PapeletaPaginationDTO;
 import com.access.model.Materia;
 import com.access.model.Papeleta;
+import com.access.repository.PapeletaRepository;
 
 @Service
 public class PapeletaService {
 	
-	  private final JdbcTemplate jdbcTemplate;
-	  private final DetallePapeletaService detallePapeletaService; 
+	  private final PapeletaRepository papeletaRepository;
 
-	    public PapeletaService(JdbcTemplate jdbcTemplate, DetallePapeletaService detallePapeletaService) {
-	        this.jdbcTemplate = jdbcTemplate;
-	        this.detallePapeletaService = detallePapeletaService;
-	    }
-	    
-	    private Papeleta convert(ResultSet rs) throws SQLException {
-	    	 Papeleta papeleta = new Papeleta();
-	            papeleta.setTipoId(rs.getString("TipoId"));
-	            papeleta.setFolio(rs.getInt("Folio"));
-	            papeleta.setFecha(rs.getString("Fecha"));
-	            papeleta.setStatus(rs.getString("Status"));
-	            papeleta.setObservacionGeneral(rs.getString("ObservacionGeneral"));
-	            papeleta.setDetallepapeleta(
-	            		detallePapeletaService.getDetallePapeleta(papeleta.getFolio())
-	            		);
-	            return papeleta;
-	    }
-
-	    public List<Papeleta> getAllPapeletas() {
-	        String sql = "SELECT * FROM Papeleta";
-	        return jdbcTemplate.query(sql, (rs, rowNum) -> {
-	            return convert(rs);
-	        });
-	    }
-	    
-	    public List<Papeleta> getPapeletasByFolio(Integer folio) {
-	        String sql = "SELECT * FROM Papeleta where Folio = ?";	       
-	        return jdbcTemplate.query(sql, (rs, rowNum) -> {
-	            return convert(rs);
-	        }, folio);
+	    public PapeletaService(PapeletaRepository papeletaRepository) {
+	        this.papeletaRepository = papeletaRepository;
 	    }
 	    
 	    public Papeleta addPapeleta(Papeleta papeleta) {
 	    	if(getPapeletasByFolio(papeleta.getFolio()).isEmpty()) {
-	    		String sql = "INSERT INTO Papeleta (TipoId,Folio,Fecha,Status,ObservacionGeneral) VALUES (?,?,?,?,?)";
-		        jdbcTemplate.update(sql,
-		        		papeleta.getTipoId(),
-		        		papeleta.getFolio(),
-		        		papeleta.getFecha(),
-		        		papeleta.getStatus(),
-		        		papeleta.getObservacionGeneral()
-		        		);
+	    		papeletaRepository.addPapeleta(papeleta);
 		        return papeleta;
 	    	}
 	    	else return new Papeleta();
 	    }
 	    
+	    public List<Papeleta> getAllPapeletas() {
+	        List<Papeleta> papeletas = papeletaRepository.getAllPapeletas();
+	        return papeletas;
+	    }
+	    
+	    public List<Papeleta> getPapeletasByFolio(Integer folio) {
+	    	List<Papeleta> papeletas = papeletaRepository.getPapeletasByFolio(folio);
+	        return papeletas;
+	    }
+	    	    
 	    public PaginationResult<List<Papeleta>> getPapeletasFiltradas(PapeletaPaginationDTO dto) {
 	        int pageValue = dto.getPage();
 	        int limitValue = dto.getLimit();
 	        int offset = (pageValue - 1) * limitValue;
 	    	
-	        StringBuilder sql = new StringBuilder("FROM Papeleta WHERE 1=1");
+	        StringBuilder sql = new StringBuilder();
 	        List<Object> params = new ArrayList<>();
 	        
 	        if (dto.getFolio() != null) {
@@ -98,18 +73,11 @@ public class PapeletaService {
 		        params.add("%" + dto.getObservacionGeneral() + "%");
 	        }
 	        
-	        String countSql = "SELECT COUNT(*) AS total " + sql.toString();
-	        int totalItems = jdbcTemplate.queryForObject(countSql, Integer.class, params.toArray());
+	        int totalItems = papeletaRepository.contarElementosPapeleta(sql.toString(), params);
 	        
 	        int totalPages = (int) Math.ceil((double) totalItems / limitValue);
 	        
-	        String paginataSql = "Select * " + sql.toString() + " LIMIT ? OFFSET ?";
-	        params.add(limitValue);
-	        params.add(offset);
-	  
-	        List<Papeleta> data = jdbcTemplate.query(paginataSql,  (rs, rowNum) -> {
-	        	return convert(rs);
-	        }, params.toArray());
+	        List<Papeleta> data = papeletaRepository.getPapeletasList(sql.toString(), params, limitValue, offset);
 	        
 	        return new PaginationResult<>(totalItems, totalPages, pageValue, data);
 	    }

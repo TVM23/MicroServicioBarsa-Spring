@@ -43,17 +43,15 @@ public class InventarioService {
 	private final ProveedorService proveedorService;
 	private final Prod_x_ColorService prod_x_ColorService;
 	private final BitacoraService bitacoraservice;
-	private final NotificacionService notificacionService;
 	
 	public InventarioService(JdbcTemplate jdbcTemplate, PapeletaService papeletaService, MateriaService materiaService, ProveedorService proveedorService,
-			Prod_x_ColorService prod_x_ColorService, BitacoraService bitacoraService, NotificacionService notificacionService) {
+			Prod_x_ColorService prod_x_ColorService, BitacoraService bitacoraService) {
         this.jdbcTemplate = jdbcTemplate;
         this.papeletaService = papeletaService;
         this.materiaService = materiaService;
         this.proveedorService = proveedorService;
         this.prod_x_ColorService = prod_x_ColorService;
         this.bitacoraservice = bitacoraService;;
-        this.notificacionService = notificacionService;
     }
 	
 	private MovimientoInventario convertMI(ResultSet rs) throws SQLException {
