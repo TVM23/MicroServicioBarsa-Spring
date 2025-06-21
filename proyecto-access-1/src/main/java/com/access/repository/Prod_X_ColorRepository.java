@@ -63,4 +63,16 @@ public class Prod_X_ColorRepository {
 		int count = jdbcTemplate.queryForObject(countSql, Integer.class, params.toArray());
 		return count;
 	}
+
+	public void actualizarExistenciasProd_X_Color(Boolean aumenta, Integer cantidad, String codigo, Integer colorId) {
+		if (aumenta) {
+			jdbcTemplate.update(
+					"UPDATE Producto_X_Color SET Existencia = Existencia + ? WHERE Codigo = ? AND ColorId = ?",
+					cantidad, codigo, colorId);
+		} else {
+			jdbcTemplate.update(
+					"UPDATE Producto_X_Color SET Existencia = Existencia - ? WHERE Codigo = ? AND ColorId = ?",
+					cantidad, codigo, colorId);
+		}
+	}
 }

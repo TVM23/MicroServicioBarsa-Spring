@@ -64,4 +64,9 @@ public class Prod_x_ColorService {
 		return new PaginationResult<>(totalItems, totalPages, pageValue, data);
 	}
 
+	public void actualizarExisactualizarExistenciasProd_X_ColortenciasMateria(Boolean aumenta, Integer cantidad,
+			String codigo, Integer colorId) {
+		prod_X_colorRepository.actualizarExistenciasProd_X_Color(aumenta, cantidad, codigo, colorId);
+	}
+
 }

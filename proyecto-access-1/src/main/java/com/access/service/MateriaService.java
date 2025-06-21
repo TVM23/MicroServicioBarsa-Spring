@@ -186,4 +186,8 @@ public class MateriaService {
 		}
 	}
 
+	public void actualizarExistenciasMateria(Boolean aumenta, Double cantidad, String codigoMat) {
+		materiaRepository.actualizarExistenciasMateria(aumenta, cantidad, codigoMat);
+	}
+
 }

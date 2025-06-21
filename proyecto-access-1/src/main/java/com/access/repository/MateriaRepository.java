@@ -77,57 +77,63 @@ public class MateriaRepository {
 			return convert(rs);
 		});
 	}
-	
-	public List<Materia> getMateriasList(String sqlClauses, List<Object> params, int limitValue, int offset){
-		String sql = "SELECT * " +
-				"FROM Materia WHERE 1=1 "+
-                sqlClauses + " LIMIT ? OFFSET ?";
+
+	public List<Materia> getMateriasList(String sqlClauses, List<Object> params, int limitValue, int offset) {
+		String sql = "SELECT * " + "FROM Materia WHERE 1=1 " + sqlClauses + " LIMIT ? OFFSET ?";
 		params.add(limitValue);
-        params.add(offset);
-        List<Materia> data = jdbcTemplate.query(sql, (rs, rowNum) -> {
-            return convert(rs); // tu función de conversión
-        }, params.toArray());
-        
-        return data;
+		params.add(offset);
+		List<Materia> data = jdbcTemplate.query(sql, (rs, rowNum) -> {
+			return convert(rs); // tu función de conversión
+		}, params.toArray());
+
+		return data;
 	}
-	
+
 	public int contarElementosMaterias(String sqlClauses, List<Object> params) {
-        String countSql = "SELECT COUNT(*) AS total " + 
-				"FROM Materia WHERE 1=1 " +
-                sqlClauses;
-        int count = jdbcTemplate.queryForObject(countSql, Integer.class, params.toArray());
-        return count;
+		String countSql = "SELECT COUNT(*) AS total " + "FROM Materia WHERE 1=1 " + sqlClauses;
+		int count = jdbcTemplate.queryForObject(countSql, Integer.class, params.toArray());
+		return count;
 	}
-	
+
 	public void createNewMateria(CreateMateriaDTO dto) {
 		String sql = "INSERT INTO Materia (CodigoMat, Descripcion, Unidad, PCompra, Existencia, Max, Min, "
 				+ "InventarioInicial, UnidadEntrada, CantXUnidad, Proceso, Borrado) VALUES "
 				+ "(?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		jdbcTemplate.update(sql, dto.getCodigoMat(), dto.getDescripcion(), dto.getUnidad(), dto.getPcompra(),
-				dto.getExistencia(), dto.getMax(), dto.getMin(), dto.getInventarioInicial(),
-				dto.getUnidadEntrada(), dto.getCantxunidad(), dto.getProceso(), dto.getBorrado());
+				dto.getExistencia(), dto.getMax(), dto.getMin(), dto.getInventarioInicial(), dto.getUnidadEntrada(),
+				dto.getCantxunidad(), dto.getProceso(), dto.getBorrado());
 	}
-	
+
 	public void insertImgMateria(String codigoMat, String url, String public_id) {
 		String sqlImg = "INSERT INTO ImagenMateria (CodigoMat, ImagenUrl, Public_Id) VALUES (?, ?, ?)";
 		jdbcTemplate.update(sqlImg, codigoMat, url, public_id);
 	}
-	
+
 	public void updateMateria(CreateMateriaDTO dto) {
 		String sql = "UPDATE Materia SET Descripcion = ?, Unidad = ?, PCompra = ?, Existencia = ?, Max = ?, Min = ?, "
 				+ "InventarioInicial = ?, UnidadEntrada = ?, CantXUnidad = ?, Proceso = ?, Borrado = ? WHERE CodigoMat = ? ";
 		jdbcTemplate.update(sql, dto.getDescripcion(), dto.getUnidad(), dto.getPcompra(), dto.getExistencia(),
-				dto.getMax(), dto.getMin(), dto.getInventarioInicial(), dto.getUnidadEntrada(),
-				dto.getCantxunidad(), dto.getProceso(), dto.getBorrado(), dto.getCodigoMat());
+				dto.getMax(), dto.getMin(), dto.getInventarioInicial(), dto.getUnidadEntrada(), dto.getCantxunidad(),
+				dto.getProceso(), dto.getBorrado(), dto.getCodigoMat());
 	}
-	
+
 	public void logicDeleteMateria(String codigo) {
 		String sql = "UPDATE Materia set Borrado = true where CodigoMat = ?";
 		jdbcTemplate.update(sql, codigo);
 	}
-	
+
 	public void deleteImagenesByCodigoMat(String codigo) {
 		String sqlDelete = "DELETE FROM ImagenMateria WHERE CodigoMat = ?";
 		jdbcTemplate.update(sqlDelete, codigo);
+	}
+
+	public void actualizarExistenciasMateria(Boolean aumenta, Double cantidad, String codigoMat) {
+		if (aumenta) {
+			jdbcTemplate.update("UPDATE Materia SET Existencia = Existencia + ? WHERE CodigoMat = ?", cantidad,
+					codigoMat);
+		} else {
+			jdbcTemplate.update("UPDATE Materia SET Existencia = Existencia - ? WHERE CodigoMat = ?", cantidad,
+					codigoMat);
+		}
 	}
 }
