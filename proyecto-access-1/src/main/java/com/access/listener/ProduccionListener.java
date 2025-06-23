@@ -11,7 +11,7 @@ import com.access.dto.produccion.IniciarTiempoDTO;
 import com.access.dto.produccion.PausarTiempoDTO;
 import com.access.dto.produccion.ReiniciarTiempoDTO;
 import com.access.dto.produccion.TiempoDTO;
-import com.access.dto.producto.ProductoxColorPaginationDTO;
+import com.access.dto.produccion.TiemposFechaDTO;
 import com.access.service.ProduccionService;
 
 @Service
@@ -156,6 +156,34 @@ public class ProduccionListener extends BaseKafkaListener {
 			try {
 				Integer procesoFolio = objectMapper.convertValue(request.get("data"), Integer.class);
 				return produccionService.getUltimaDetencioActiva(procesoFolio);
+			} catch (Exception e) {
+				System.err.println("Error en el servicio: " + e.getMessage());
+				e.printStackTrace();
+				throw e;
+			}
+		});
+	}
+	
+	@KafkaListener(topics = "get-detenciones-folio", groupId = "materia-service-group")
+	public void getObtenerDetencionesFolio(String message) {
+		processKafkaMessage(message, "produccion-detencionesFolio-response", request -> {
+			try {
+				Integer procesoFolio = objectMapper.convertValue(request.get("data"), Integer.class);
+				return produccionService.getObtenerDetencionesFolio(procesoFolio);
+			} catch (Exception e) {
+				System.err.println("Error en el servicio: " + e.getMessage());
+				e.printStackTrace();
+				throw e;
+			}
+		});
+	}
+	
+	@KafkaListener(topics = "get-tiempos-periodo", groupId = "materia-service-group")
+	public void obtenerTiemposPeriodo(String message) {
+		processKafkaMessage(message, "produccion-tiemposPeriodo-response", request -> {
+			try {
+				TiemposFechaDTO dto = objectMapper.convertValue(request.get("data"), TiemposFechaDTO.class);
+				return produccionService.obtenerTiemposPeriodo(dto);
 			} catch (Exception e) {
 				System.err.println("Error en el servicio: " + e.getMessage());
 				e.printStackTrace();

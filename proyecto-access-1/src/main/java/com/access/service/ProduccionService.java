@@ -1,6 +1,7 @@
 package com.access.service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
+import com.access.dto.PaginationResult;
 import com.access.dto.produccion.DesactivarDetencionDTO;
 import com.access.dto.produccion.DetencionDTO;
 import com.access.dto.produccion.FinalizarTiempoDTO;
@@ -17,6 +19,7 @@ import com.access.dto.produccion.IniciarTiempoDTO;
 import com.access.dto.produccion.PausarTiempoDTO;
 import com.access.dto.produccion.ReiniciarTiempoDTO;
 import com.access.dto.produccion.TiempoDTO;
+import com.access.dto.produccion.TiemposFechaDTO;
 import com.access.model.Detencion;
 import com.access.model.Papeleta;
 import com.access.model.Tiempo;
@@ -56,6 +59,34 @@ public class ProduccionService {
 	public List<Detencion> getUltimaDetencioActiva(Integer procesoFolio) {
 		List<Detencion> detencionActiva = produccionRepository.getUltimaDetencionActiva(procesoFolio);
 		return detencionActiva;
+	}
+
+	public List<Detencion> getObtenerDetencionesFolio(Integer procesoFolio) {
+		List<Detencion> detenciones = produccionRepository.getObtenerDetencionesFolio(procesoFolio);
+		return detenciones;
+	}
+	
+	public PaginationResult<List<Tiempo>> obtenerTiemposPeriodo(TiemposFechaDTO dto) {
+		int pageValue = dto.getPage();
+		int limitValue = dto.getLimit();
+		int offset = (pageValue - 1) * limitValue;
+		StringBuilder sql = new StringBuilder();
+		List<Object> params = new ArrayList<>();
+
+		if (dto.getFechaInicio() != null && dto.getFechaFin() != null) {
+			sql.append(" AND FechaInicio BETWEEN ? AND ?");
+			params.add(dto.getFechaInicio());
+			params.add(dto.getFechaFin());
+		}
+		// Conteo total
+		int totalItems = produccionRepository.contarTiemposPeriodo(sql.toString(), params);
+		// Paginación
+		int totalPages = (int) Math.ceil((double) totalItems / limitValue);
+		List<Tiempo> data = produccionRepository.getTiemposPeriodoList(sql.toString(), params, limitValue, offset);
+		for (Tiempo tiempo : data) {
+			tiempo.setDetenciones(getDetencionesByFolioEtapa(tiempo.getProcesoFolio(), tiempo.getEtapa()));
+		}
+		return new PaginationResult<>(totalItems, totalPages, pageValue, data);
 	}
 
 	public ResponseEntity<?> iniciarTiempo(IniciarTiempoDTO dto) {
@@ -209,7 +240,7 @@ public class ProduccionService {
 		}
 		// return notificacion;
 	}
-	
+
 	// Estos se podrian combinar con los de arriba para no tener un metodo que hace
 	// lo de otro metodo, pero me da flojera cambiarlo
 	public List<Tiempo> obtenerTiempo(TiempoDTO dto) {

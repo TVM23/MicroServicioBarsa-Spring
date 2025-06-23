@@ -80,6 +80,13 @@ public class ProduccionRepository {
 		}, procesoFolio);
 	}
 	
+	public List<Detencion> getObtenerDetencionesFolio(Integer procesoFolio) {
+		String sql = "SELECT * FROM Detencion WHERE Folio = ? ORDER BY Fecha DESC";
+		return jdbcTemplate.query(sql, (rs, rowNum) -> {
+			return convertDetencion(rs);
+		}, procesoFolio);
+	}
+	
 	public void createTiempo(IniciarTiempoDTO dto) {
 		String sql = "INSERT INTO Tiempo (ProcesoFolio, Etapa, Tiempo, FechaInicio, "
 				+ "IsRunning, IsFinished, Usuario) VALUES (?, ?, 0, ?, 1, 0, ?)";
@@ -129,5 +136,22 @@ public class ProduccionRepository {
 		jdbcTemplate.update(sql, "", dto.getFolio(), dto.getEtapa());
 		String sql2 = "UPDATE Detencion SET Activa = 0 " + "WHERE Folio = ? AND Etapa = ? AND Id = ?";
 		jdbcTemplate.update(sql2, dto.getFolio(), dto.getEtapa(), id);
+	}
+	
+	public List<Tiempo> getTiemposPeriodoList(String sqlClauses, List<Object> params, int limitValue, int offset) {
+		String sql = "SELECT * " + "FROM Tiempo WHERE 1=1 " + sqlClauses  + " ORDER BY FechaInicio DESC LIMIT ? OFFSET ?";
+		params.add(limitValue);
+		params.add(offset);
+		List<Tiempo> data = jdbcTemplate.query(sql, (rs, rowNum) -> {
+			return convertTiempo(rs); // tu función de conversión
+		}, params.toArray());
+
+		return data;
+	}
+
+	public int contarTiemposPeriodo(String sqlClauses, List<Object> params) {
+		String countSql = "SELECT COUNT(*) AS total " + "FROM Tiempo WHERE 1=1 " + sqlClauses;
+		int count = jdbcTemplate.queryForObject(countSql, Integer.class, params.toArray());
+		return count;
 	}
 }

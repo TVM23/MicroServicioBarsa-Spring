@@ -1,5 +1,7 @@
 package com.access.model;
 
+import java.util.List;
+
 public class Tiempo {
 	private Integer id;
 	private Integer procesoFolio;
@@ -10,7 +12,14 @@ public class Tiempo {
 	private Boolean isRunning;
 	private Boolean isFinished;
 	private String usuario;
+    private List<Detencion> detenciones;
 	
+	public List<Detencion> getDetenciones() {
+		return detenciones;
+	}
+	public void setDetenciones(List<Detencion> detenciones) {
+		this.detenciones = detenciones;
+	}
 	public String getUsuario() {
 		return usuario;
 	}

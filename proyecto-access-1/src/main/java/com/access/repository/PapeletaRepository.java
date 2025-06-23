@@ -8,17 +8,14 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import com.access.model.Papeleta;
-import com.access.service.DetallePapeletaService;
 
 @Repository
 public class PapeletaRepository {
 	
 	private final JdbcTemplate jdbcTemplate;
-	private final DetallePapeletaService detallePapeletaService; 
 	
-	public PapeletaRepository(JdbcTemplate jdbcTemplate, DetallePapeletaService detallePapeletaService) {
+	public PapeletaRepository(JdbcTemplate jdbcTemplate) {
 		this.jdbcTemplate = jdbcTemplate;
-        this.detallePapeletaService = detallePapeletaService;
 	}
 	
 	private Papeleta convert(ResultSet rs) throws SQLException {
@@ -28,9 +25,6 @@ public class PapeletaRepository {
            papeleta.setFecha(rs.getString("Fecha"));
            papeleta.setStatus(rs.getString("Status"));
            papeleta.setObservacionGeneral(rs.getString("ObservacionGeneral"));
-           papeleta.setDetallepapeleta(
-           		detallePapeletaService.getDetallePapeleta(papeleta.getFolio())
-           		);
            return papeleta;
    }
 	

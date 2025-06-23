@@ -1,19 +1,12 @@
 package com.access.service;
 
-
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Service;
 
 import com.access.dto.PaginationResult;
-import com.access.dto.materia.MateriaPaginationDTO;
 import com.access.dto.papeleta.PapeletaPaginationDTO;
-import com.access.model.Materia;
 import com.access.model.Papeleta;
 import com.access.repository.PapeletaRepository;
 
@@ -21,9 +14,11 @@ import com.access.repository.PapeletaRepository;
 public class PapeletaService {
 	
 	  private final PapeletaRepository papeletaRepository;
+		private final DetallePapeletaService detallePapeletaService; 
 
-	    public PapeletaService(PapeletaRepository papeletaRepository) {
+	    public PapeletaService(PapeletaRepository papeletaRepository, DetallePapeletaService detallePapeletaService) {
 	        this.papeletaRepository = papeletaRepository;
+	        this.detallePapeletaService = detallePapeletaService;
 	    }
 	    
 	    public Papeleta addPapeleta(Papeleta papeleta) {
@@ -41,6 +36,9 @@ public class PapeletaService {
 	    
 	    public List<Papeleta> getPapeletasByFolio(Integer folio) {
 	    	List<Papeleta> papeletas = papeletaRepository.getPapeletasByFolio(folio);
+	    	for (Papeleta papeleta : papeletas) {
+	            papeleta.setDetallepapeleta(detallePapeletaService.getDetallePapeleta(papeleta.getFolio()));
+	        }
 	        return papeletas;
 	    }
 	    	    
@@ -78,6 +76,9 @@ public class PapeletaService {
 	        int totalPages = (int) Math.ceil((double) totalItems / limitValue);
 	        
 	        List<Papeleta> data = papeletaRepository.getPapeletasList(sql.toString(), params, limitValue, offset);
+	        for (Papeleta papeleta : data) {
+	            papeleta.setDetallepapeleta(detallePapeletaService.getDetallePapeleta(papeleta.getFolio()));
+	        }
 	        
 	        return new PaginationResult<>(totalItems, totalPages, pageValue, data);
 	    }
