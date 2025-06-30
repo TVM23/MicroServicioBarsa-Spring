@@ -2,14 +2,17 @@ package com.access.service;
 
 import java.sql.Date;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
+import com.access.model.Detencion;
 import com.access.model.Materia;
 import com.access.model.Notificacion;
+import com.access.model.Tiempo;
 import com.access.repository.NotificacionRepository;
 
 @Service
@@ -17,10 +20,13 @@ public class NotificacionService {
 
 	private final NotificacionRepository notificacionRepository;
 	private final MateriaService materiaService;
+	private final ProduccionService produccionService;
 
-	public NotificacionService(NotificacionRepository notificacionRepository, @Lazy MateriaService materiaService) {
+	public NotificacionService(NotificacionRepository notificacionRepository, @Lazy MateriaService materiaService,
+			ProduccionService produccionService) {
 		this.notificacionRepository = notificacionRepository;
 		this.materiaService = materiaService;
+		this.produccionService = produccionService;
 	}
 
 	public List<Notificacion> getListadoNotificaciones() {
@@ -35,7 +41,7 @@ public class NotificacionService {
 			evaluarNotificacion(materia.getCodigoMat());
 		}
 	}
-	
+
 	public List<Notificacion> getNotificacionCodigo(String codigo) {
 		List<Notificacion> notif = notificacionRepository.getNotificacionCodigo(codigo);
 		return notif;
@@ -92,10 +98,24 @@ public class NotificacionService {
 		}
 	}
 
+	//////// Esto es lo que se usa para que se envie la lista de posibles notifs al
+	//////// nestjs
+	///
+	///
+	public List<Notificacion> evaluarYEnviarTodas() {
+		List<Materia> materias = materiaService.getMateriasNoBorradas();
+		List<Notificacion> notificaciones = new ArrayList<>();
 
-	
-	
-	////////Esto es lo que se usa para que se envie la lista de posibles notifs al nestjs
+		for (Materia materia : materias) {
+			Notificacion dto = evaluarNotificacion(materia);
+			if (dto != null) {
+				notificaciones.add(dto);
+			}
+		}
+
+		return notificaciones;
+	}
+
 	private Notificacion evaluarNotificacion(Materia materia) {
 		double existencia = materia.getExistencia();
 		double min = materia.getMin();
@@ -131,17 +151,88 @@ public class NotificacionService {
 		return dto;
 	}
 
-	public List<Notificacion> evaluarYEnviarTodas() {
-		List<Materia> materias = materiaService.getMateriasNoBorradas();
+	public List<Notificacion> evaluarTiemposPausas() {
+		List<Tiempo> tiempos = produccionService.getTiemposPausados();
+		List<Detencion> detenciones = produccionService.getDetencionesActivas();
 		List<Notificacion> notificaciones = new ArrayList<>();
 
-		for (Materia materia : materias) {
-			Notificacion dto = evaluarNotificacion(materia);
+		for (Tiempo tiempo : tiempos) {
+			Notificacion dto = evaluarNotificacionTiempo(tiempo);
+			if (dto != null) {
+				notificaciones.add(dto);
+			}
+		}
+		
+		for (Detencion detencion : detenciones) {
+			Notificacion dto = evaluarNotificacionDetencion(detencion);
 			if (dto != null) {
 				notificaciones.add(dto);
 			}
 		}
 
 		return notificaciones;
+	}
+
+	private Notificacion evaluarNotificacionTiempo(Tiempo tiempo) {
+
+		String codigo = tiempo.getProcesoFolio().toString();
+		String mensaje = "Este proceso ha estado pausado por un periodo extenso de tiempo por el usuario " + tiempo.getUsuario();
+		String area = "PRODUCCION";
+		String etapa = tiempo.getEtapa();
+		String descripcion = "PROCESO EN PAUSA POR MUCHO TIEMPO";
+
+		// Convertir la fecha string a LocalDate
+		String fechaStr = tiempo.getFechaPausa();
+		String fechaSolo = fechaStr.split(" ")[0];  // Extraer solo la fecha
+        LocalDate fechaPausa = LocalDate.parse(fechaSolo);
+        LocalDate hoy = LocalDate.now();
+		
+		// Calcular los días transcurridos
+	    long diasTranscurridos = ChronoUnit.DAYS.between(fechaPausa, hoy);
+
+		if (diasTranscurridos >= 3) {
+			Notificacion dto = new Notificacion();
+			dto.setCodigo(codigo);
+			dto.setEtapa(etapa);
+			dto.setDescripcion(descripcion);
+			dto.setMensaje(mensaje);
+			dto.setFecha(LocalDate.now().toString());
+			dto.setArea(area);
+			return dto;
+		}
+		
+		return null;
+	}
+	
+	private Notificacion evaluarNotificacionDetencion(Detencion detencion) {
+
+		String codigo = detencion.getFolio().toString();
+		String mensaje = "Este proceso ha estado detenido por un periodo extenso de tiempo por el usuario " + detencion.getUsuario();
+		String area = "PRODUCCION";
+		String etapa = detencion.getEtapa().toUpperCase();
+		String descripcion = "PROCESO EN DETENCION POR MUCHO TIEMPO";
+
+		// Convertir la fecha string a LocalDate		
+		String fechaStr = detencion.getFecha();
+		String fechaSolo = fechaStr.split(" ")[0];  // Extraer solo la fecha
+        LocalDate fechaPausa = LocalDate.parse(fechaSolo);
+        LocalDate hoy = LocalDate.now();
+		
+		
+		// Calcular los días transcurridos
+	    long diasTranscurridos = ChronoUnit.DAYS.between(fechaPausa, hoy);
+
+		if (diasTranscurridos >= 3) {
+			Notificacion dto = new Notificacion();
+			dto.setCodigo(codigo);
+			dto.setEtapa(etapa);
+			dto.setDescripcion(descripcion);
+			dto.setMensaje(mensaje);
+			dto.setFecha(LocalDate.now().toString());
+			dto.setArea(area);
+			return dto;
+		}
+		
+		return null;
 	}
 }

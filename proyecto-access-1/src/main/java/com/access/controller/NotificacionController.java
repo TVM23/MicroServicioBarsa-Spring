@@ -24,5 +24,11 @@ public class NotificacionController {
         List<Notificacion> bajas = notificacionService.evaluarYEnviarTodas();
         return ResponseEntity.ok(bajas);
     }
+    
+    @GetMapping("/lista-notificaciones-tiempos")
+    public ResponseEntity<List<Notificacion>> obtenerTiemposPausadosExtendidos() {
+        List<Notificacion> tiempos = notificacionService.evaluarTiemposPausas();
+        return ResponseEntity.ok(tiempos);
+    }
 
 }

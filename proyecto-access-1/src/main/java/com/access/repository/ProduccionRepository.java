@@ -33,6 +33,7 @@ public class ProduccionRepository {
 		tiempo.setTiempo(rs.getInt("Tiempo"));
 		tiempo.setFechaInicio(rs.getString("FechaInicio"));
 		tiempo.setFechaFin(rs.getString("FechaFin"));
+		tiempo.setFechaPausa(rs.getString("FechaPausa"));
 		tiempo.setIsRunning(rs.getBoolean("IsRunning"));
 		tiempo.setIsFinished(rs.getBoolean("IsFinished"));
 		tiempo.setUsuario(rs.getString("Usuario"));
@@ -87,6 +88,20 @@ public class ProduccionRepository {
 		}, procesoFolio);
 	}
 	
+	public List<Tiempo> getTiemposPausados(){
+		String sql = "SELECT * FROM Tiempo WHERE IsRunning = false AND IsFinished = false AND FechaPausa IS NOT NULL";
+		return jdbcTemplate.query(sql, (rs, rowNum) -> {
+			return convertTiempo(rs);
+		});
+	}
+	
+	public List<Detencion> getDetencionesActivas(){
+		String sql = "SELECT * FROM Detencion WHERE Activa = true";
+		return jdbcTemplate.query(sql, (rs, rowNum) -> {
+			return convertDetencion(rs);
+		});
+	}
+	
 	public void createTiempo(IniciarTiempoDTO dto) {
 		String sql = "INSERT INTO Tiempo (ProcesoFolio, Etapa, Tiempo, FechaInicio, "
 				+ "IsRunning, IsFinished, Usuario) VALUES (?, ?, 0, ?, 1, 0, ?)";
@@ -94,18 +109,18 @@ public class ProduccionRepository {
 	}
 	
 	public void reanudarTiempo(IniciarTiempoDTO dto) {
-		String sql = "UPDATE Tiempo SET IsRunning = 1, Usuario = ? WHERE ProcesoFolio = ? AND Etapa = ?";
-		jdbcTemplate.update(sql, dto.getNombreUsuario(), dto.getFolio(), dto.getEtapa());
+		String sql = "UPDATE Tiempo SET IsRunning = 1, Usuario = ?, FechaPausa = ? WHERE ProcesoFolio = ? AND Etapa = ?";
+		jdbcTemplate.update(sql, dto.getNombreUsuario(), null,  dto.getFolio(), dto.getEtapa());
 	}
 	
 	public void pausarTiempo(PausarTiempoDTO dto) {
-		String sql = "UPDATE Tiempo SET IsRunning = 0, Tiempo = ?, Usuario = ? WHERE ProcesoFolio = ? AND Etapa = ?";
-		jdbcTemplate.update(sql, dto.getTiempo(), dto.getNombreUsuario(), dto.getFolio(), dto.getEtapa());
+		String sql = "UPDATE Tiempo SET IsRunning = 0, Tiempo = ?, Usuario = ?, FechaPausa = ? WHERE ProcesoFolio = ? AND Etapa = ?";
+		jdbcTemplate.update(sql, dto.getTiempo(), dto.getNombreUsuario(), dto.getFechaPausa(), dto.getFolio(), dto.getEtapa());
 	}
 	
 	public void reiniciarTiempo(ReiniciarTiempoDTO dto) {
-		String sql = "UPDATE Tiempo SET IsRunning = 0, Tiempo = 0, Usuario = ? WHERE ProcesoFolio = ? AND Etapa = ?";
-		jdbcTemplate.update(sql, "", dto.getFolio(), dto.getEtapa());
+		String sql = "UPDATE Tiempo SET IsRunning = 0, Tiempo = 0, Usuario = ?, FechaPausa = ? WHERE ProcesoFolio = ? AND Etapa = ?";
+		jdbcTemplate.update(sql, "", null, dto.getFolio(), dto.getEtapa());
 	}
 	
 	public void finalizarTiempo(FinalizarTiempoDTO dto, Boolean flag) {
@@ -116,15 +131,15 @@ public class ProduccionRepository {
 					dto.getNombreUsuario());
 		}else {
 			String sql = "UPDATE Tiempo SET IsRunning = 0, Tiempo = ?, IsFinished = 1, "
-					+ "FechaFin = ?, Usuario = ? WHERE ProcesoFolio = ? AND Etapa = ?";
-			jdbcTemplate.update(sql, dto.getTiempo(), dto.getFechaFin(), dto.getNombreUsuario(), dto.getFolio(),
+					+ "FechaFin = ?, Usuario = ?, FechaPausa = ? WHERE ProcesoFolio = ? AND Etapa = ?";
+			jdbcTemplate.update(sql, dto.getTiempo(), dto.getFechaFin(), dto.getNombreUsuario(), null, dto.getFolio(),
 					dto.getEtapa());
 		}
 	}
 	
 	public void detencionTiempo(DetencionDTO dto, Integer id) {
-		String sql = "UPDATE Tiempo SET IsRunning = 0, Tiempo = ?, Usuario = ? " + "WHERE ProcesoFolio = ? AND Etapa = ?";
-		jdbcTemplate.update(sql, dto.getTiempo(), dto.getNombreUsuario(), dto.getFolio(), dto.getEtapa());
+		String sql = "UPDATE Tiempo SET IsRunning = 0, Tiempo = ?, Usuario = ?, FechaPausa = ? " + "WHERE ProcesoFolio = ? AND Etapa = ?";
+		jdbcTemplate.update(sql, dto.getTiempo(), dto.getNombreUsuario(), null, dto.getFolio(), dto.getEtapa());
 		String sql2 = "INSERT INTO Detencion (Folio, TiempoId, Etapa, Motivo, Fecha, "
 				+ "Activa, Usuario) VALUES (?, ?, ?, ?, ?, 1, ?)";
 		jdbcTemplate.update(sql2, dto.getFolio(), id, dto.getEtapa(), dto.getMotivo(),

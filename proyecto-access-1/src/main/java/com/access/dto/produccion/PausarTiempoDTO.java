@@ -5,7 +5,14 @@ public class PausarTiempoDTO {
 	private String etapa;
 	private Integer tiempo;
 	private String nombreUsuario;
+	private String fechaPausa;
 
+	public String getFechaPausa() {
+		return fechaPausa;
+	}
+	public void setFechaPausa(String fechaPausa) {
+		this.fechaPausa = fechaPausa;
+	}
 	public String getNombreUsuario() {
 		return nombreUsuario;
 	}

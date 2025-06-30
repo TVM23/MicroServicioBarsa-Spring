@@ -9,9 +9,17 @@ public class Tiempo {
 	private Integer tiempo;
 	private String fechaInicio;
 	private String fechaFin;
+	private String fechaPausa;
 	private Boolean isRunning;
 	private Boolean isFinished;
 	private String usuario;
+	
+	public String getFechaPausa() {
+		return fechaPausa;
+	}
+	public void setFechaPausa(String fechaPausa) {
+		this.fechaPausa = fechaPausa;
+	}
     private List<Detencion> detenciones;
 	
 	public List<Detencion> getDetenciones() {

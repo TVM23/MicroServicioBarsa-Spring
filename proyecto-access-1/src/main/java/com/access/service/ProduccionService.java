@@ -66,6 +66,16 @@ public class ProduccionService {
 		return detenciones;
 	}
 	
+	public List<Tiempo> getTiemposPausados() {
+		List<Tiempo> tiempos = produccionRepository.getTiemposPausados();
+		return tiempos;
+	}
+
+	public List<Detencion> getDetencionesActivas() {
+		List<Detencion> detencionesActiva = produccionRepository.getDetencionesActivas();
+		return detencionesActiva;
+	}
+	
 	public PaginationResult<List<Tiempo>> obtenerTiemposPeriodo(TiemposFechaDTO dto) {
 		int pageValue = dto.getPage();
 		int limitValue = dto.getLimit();
@@ -146,7 +156,9 @@ public class ProduccionService {
 					.body(Map.of("error", "No existe un tiempo que cumpla estos requisitos para reiniciar"));
 		} else {
 			produccionRepository.reiniciarTiempo(dto);
+			String mensaje = "Tiempo reiniciado en la etapa " + dto.getEtapa() + " para folio " + dto.getFolio();
 			String descripcion = "TIEMPO REINICIADO";
+			notificacionTiempo(dto.getFolio().toString(), descripcion, dto.getNombreUsuario(), mensaje, dto.getEtapa());
 			/// INICIO DE BITACORATITMPO
 			this.bitacoraTiempoService.insertarRegistro(dto.getFolio(), dto.getEtapa(), descripcion,
 					dto.getNombreUsuario());
@@ -181,6 +193,11 @@ public class ProduccionService {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
 					.body(Map.of("error", "No existe un tiempo que cumpla estos requisitos para detener"));
 		} else {
+			List<Detencion> detencionActiva = produccionRepository.getUltimaDetencionActiva(dto.getFolio());
+			if(!detencionActiva.isEmpty()) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+						.body(Map.of("error", "Ya existe una detencion activa para este tiempo"));
+			}
 			produccionRepository.detencionTiempo(dto, tiempo.get(0).getId());
 			/////////// Envair a nestjs para generar notificacion
 			String mensaje = "Detención de tiempo en la etapa " + dto.getEtapa() + " para folio " + dto.getFolio()
