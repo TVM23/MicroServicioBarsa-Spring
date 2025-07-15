@@ -16,11 +16,19 @@ public class Materia {
     private Double CantXUnidad;
     private String Proceso;
     private Boolean Borrado;
+    private Integer Merma;
     private List<Imagen> imagenes; 
     
     
 	public Materia() {}
-
+	
+	
+	public Integer getMerma() {
+		return Merma;
+	}
+	public void setMerma(Integer merma) {
+		Merma = merma;
+	}
 	public String getCodigoMat() {
 		return codigoMat;
 	}

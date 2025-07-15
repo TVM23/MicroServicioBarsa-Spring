@@ -95,14 +95,28 @@ public class InventarioService {
 															// entradas o salidas
 		for (DetalleMovMateriaDTO item : dto.getDetalles()) {
 			List<Materia> materia = materiaService.getMateriaByCodigo(item.getCodigoMat());
-			inventarioRepository.insertDetalleMovimientoMateria(consecutivo, item, materia.get(0).getExistencia(),
-					materia.get(0).getPCompra());
-			// Actualizar existencia en Materia
-			materiaService.actualizarExistenciasMateria(aumenta, item.getCantidad(), item.getCodigoMat());
-			// Registrar en bitacora
-			bitacoraservice.insertBitacoraRegistro(dto.getMovId(), "Materia", dto.getFolio(), item.getCodigoMat(),
-					dto.getUsuario().toUpperCase(), item.getCantidad(), materia.get(0).getExistencia(), null);
-			// notificacionService.evaluarNotificacion(item.getCodigoMat());
+			Materia mat = materia.get(0);
+			if(dto.getMovId() == 5) {
+				Double merma = mat.getMerma() / 100.0;
+				Double cantidadSalida = item.getCantidad() + (item.getCantidad() * merma);
+				inventarioRepository.insertDetalleMovimientoMateria(consecutivo, item.getCodigoMat(),
+						cantidadSalida, mat.getExistencia(), mat.getPCompra(), item.getProcesada());
+				// Actualizar existencia en Materia
+				materiaService.actualizarExistenciasMateria(aumenta, cantidadSalida, item.getCodigoMat());
+				// Registrar en bitacora
+				bitacoraservice.insertBitacoraRegistro(dto.getMovId(), "Materia", dto.getFolio(), item.getCodigoMat(),
+						dto.getUsuario().toUpperCase(), cantidadSalida, materia.get(0).getExistencia(), null);
+				// notificacionService.evaluarNotificacion(item.getCodigoMat());
+			}else {
+				inventarioRepository.insertDetalleMovimientoMateria(consecutivo, item.getCodigoMat(),
+						item.getCantidad(), mat.getExistencia(), mat.getPCompra(), item.getProcesada());
+				// Actualizar existencia en Materia
+				materiaService.actualizarExistenciasMateria(aumenta, item.getCantidad(), item.getCodigoMat());
+				// Registrar en bitacora
+				bitacoraservice.insertBitacoraRegistro(dto.getMovId(), "Materia", dto.getFolio(), item.getCodigoMat(),
+						dto.getUsuario().toUpperCase(), item.getCantidad(), materia.get(0).getExistencia(), null);
+				// notificacionService.evaluarNotificacion(item.getCodigoMat());
+			}
 		}
 		return ResponseEntity.ok(Map.of("message", "Movimiento de materia generado exitosamente"));
 	}

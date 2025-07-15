@@ -45,7 +45,7 @@ public class PapeletaRepository {
 	public List<Papeleta> getPapeletasList(String sqlClauses, List<Object> params, int limitValue, int offset){
 		String sql = "SELECT * " +
 				"FROM Papeleta WHERE 1=1 "+
-                sqlClauses + " LIMIT ? OFFSET ?";
+                sqlClauses + " ORDER BY Fecha DESC LIMIT ? OFFSET ?";
 		params.add(limitValue);
         params.add(offset);
         List<Papeleta> data = jdbcTemplate.query(sql, (rs, rowNum) -> {

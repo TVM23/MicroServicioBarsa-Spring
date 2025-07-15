@@ -17,9 +17,16 @@ public class CreateMateriaDTO {
     private Double cantxunidad;
     private String proceso;
     private String borrado;
+    private Integer merma;
     private List<ImagenDTO> imagenes; 
     
     
+	public Integer getMerma() {
+		return merma;
+	}
+	public void setMerma(Integer merma) {
+		this.merma = merma;
+	}
 	public List<ImagenDTO> getImagenes() {
 		return imagenes;
 	}

@@ -35,6 +35,7 @@ public class MateriaRepository {
 		materia.setCantXUnidad(rs.getDouble("CantXUnidad"));
 		materia.setProceso(rs.getString("Proceso"));
 		materia.setBorrado(rs.getBoolean("Borrado"));
+		materia.setMerma(rs.getInt("Merma"));
 		materia.setImagenes(this.getImagenesMateria(materia.getCodigoMat()));
 		return materia;
 	}
@@ -97,11 +98,11 @@ public class MateriaRepository {
 
 	public void createNewMateria(CreateMateriaDTO dto) {
 		String sql = "INSERT INTO Materia (CodigoMat, Descripcion, Unidad, PCompra, Existencia, Max, Min, "
-				+ "InventarioInicial, UnidadEntrada, CantXUnidad, Proceso, Borrado) VALUES "
-				+ "(?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+				+ "InventarioInicial, UnidadEntrada, CantXUnidad, Proceso, Merma, Borrado) VALUES "
+				+ "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		jdbcTemplate.update(sql, dto.getCodigoMat(), dto.getDescripcion(), dto.getUnidad(), dto.getPcompra(),
 				dto.getExistencia(), dto.getMax(), dto.getMin(), dto.getInventarioInicial(), dto.getUnidadEntrada(),
-				dto.getCantxunidad(), dto.getProceso(), dto.getBorrado());
+				dto.getCantxunidad(), dto.getProceso(), dto.getMerma(), dto.getBorrado());
 	}
 
 	public void insertImgMateria(String codigoMat, String url, String public_id) {
@@ -111,10 +112,11 @@ public class MateriaRepository {
 
 	public void updateMateria(CreateMateriaDTO dto) {
 		String sql = "UPDATE Materia SET Descripcion = ?, Unidad = ?, PCompra = ?, Existencia = ?, Max = ?, Min = ?, "
-				+ "InventarioInicial = ?, UnidadEntrada = ?, CantXUnidad = ?, Proceso = ?, Borrado = ? WHERE CodigoMat = ? ";
+				+ "InventarioInicial = ?, UnidadEntrada = ?, CantXUnidad = ?, Proceso = ?, Merma = ?, Borrado = ? "
+				+ "WHERE CodigoMat = ? ";
 		jdbcTemplate.update(sql, dto.getDescripcion(), dto.getUnidad(), dto.getPcompra(), dto.getExistencia(),
 				dto.getMax(), dto.getMin(), dto.getInventarioInicial(), dto.getUnidadEntrada(), dto.getCantxunidad(),
-				dto.getProceso(), dto.getBorrado(), dto.getCodigoMat());
+				dto.getProceso(), dto.getMerma(), dto.getBorrado(), dto.getCodigoMat());
 	}
 
 	public void logicDeleteMateria(String codigo) {

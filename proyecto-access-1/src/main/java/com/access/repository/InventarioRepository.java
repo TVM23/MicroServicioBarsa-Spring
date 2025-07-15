@@ -13,7 +13,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Repository;
 
-import com.access.dto.inventario.DetalleMovMateriaDTO;
 import com.access.dto.inventario.DetalleMovProductoDTO;
 import com.access.dto.inventario.MovimientoMateriaDTO;
 import com.access.dto.inventario.MovimientosDTO;
@@ -44,7 +43,10 @@ public class InventarioRepository {
 	private MovimientoMateria convertMat(ResultSet rs) throws SQLException {
 		MovimientoMateria movMat = new MovimientoMateria();
 		List<MovimientoInventario> list = getMovimientoInventarioByMovId(rs.getInt("MovId"));
-		String descripcionMov = list.get(0).getDescripcion();
+		String descripcionMov = "";
+		if(!list.isEmpty()) {
+			descripcionMov = list.get(0).getDescripcion();
+		}
 		movMat.setConsecutivo(rs.getInt("Consecutivo"));
 		movMat.setMovId(rs.getInt("MovId"));
 		movMat.setDescripcionInventario(descripcionMov);
@@ -140,12 +142,11 @@ public class InventarioRepository {
 		return keyHolder;
 	}
 
-	public void insertDetalleMovimientoMateria(Long consecutivo, DetalleMovMateriaDTO item, Double existencia,
-			Double pCompra) {
+	public void insertDetalleMovimientoMateria(Long consecutivo, String codigoMat, Double cantidad, Double existencia,
+			Double pCompra, Boolean procesada) {
 		String sqlDetalle = "INSERT INTO Detalle_Movimiento_Materia (Consecutivo, CodigoMat, Cantidad, ExistenciaAnt, "
 				+ "PCosto, Procesada) VALUES (?, ?, ?, ?, ?, ?)";
-		jdbcTemplate.update(sqlDetalle, consecutivo, item.getCodigoMat(), item.getCantidad(), existencia, pCompra,
-				item.getProcesada());
+		jdbcTemplate.update(sqlDetalle, consecutivo, codigoMat, cantidad, existencia, pCompra, procesada);
 	}
 
 	public GeneratedKeyHolder insertMovimientoProducto(MovimientosDTO dto) {
